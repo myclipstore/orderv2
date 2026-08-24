@@ -1,1 +1,3656 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1"
+>
+
+<title>Canva Premium Admin</title>
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  background:#f6f7fb;
+  color:#172033;
+  font-family:Arial,Helvetica,sans-serif;
+}
+
+.container{
+  width:min(1400px,95%);
+  margin:0 auto;
+}
+
+header{
+  padding:26px 0 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+}
+
+.brand{
+  font-size:25px;
+  font-weight:800;
+}
+
+.subtitle{
+  margin-top:5px;
+  color:#667085;
+  font-size:14px;
+}
+
+.card{
+  background:#fff;
+  border:1px solid #e7e9ef;
+  border-radius:18px;
+  padding:22px;
+  margin-bottom:18px;
+  box-shadow:0 8px 30px rgba(0,0,0,.04);
+}
+
+.hidden{
+  display:none !important;
+}
+
+.note{
+  background:#fff7ed;
+  color:#9a3412;
+  padding:13px 15px;
+  border-radius:11px;
+  margin-bottom:18px;
+  font-size:13px;
+  line-height:1.5;
+}
+
+input,
+select{
+  width:100%;
+  padding:12px 13px;
+  border:1px solid #d8dce5;
+  border-radius:10px;
+  font-size:14px;
+  background:#fff;
+}
+
+input:focus,
+select:focus{
+  outline:none;
+  border-color:#7c3aed;
+  box-shadow:0 0 0 3px rgba(124,58,237,.08);
+}
+
+label{
+  display:block;
+  font-weight:700;
+  margin:12px 0 7px;
+}
+
+button{
+  border:0;
+  border-radius:10px;
+  background:#7c3aed;
+  color:#fff;
+  padding:11px 15px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#6d28d9;
+}
+
+button:disabled{
+  background:#c7cad3;
+  cursor:not-allowed;
+}
+
+button.dark{
+  background:#111827;
+}
+
+button.dark:hover{
+  background:#1f2937;
+}
+
+button.green{
+  background:#059669;
+}
+
+button.green:hover{
+  background:#047857;
+}
+
+button.red{
+  background:#be123c;
+}
+
+button.red:hover{
+  background:#9f1239;
+}
+
+button.small{
+  padding:7px 10px;
+  font-size:11px;
+}
+
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.section-title{
+  font-size:20px;
+  font-weight:800;
+  margin-bottom:5px;
+}
+
+.section-subtitle{
+  color:#667085;
+  font-size:13px;
+  line-height:1.5;
+  margin-bottom:16px;
+}
+
+.message{
+  display:none;
+  padding:13px;
+  border-radius:10px;
+  margin-top:12px;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.message.ok{
+  display:block;
+  background:#ecfdf5;
+  color:#065f46;
+}
+
+.message.err{
+  display:block;
+  background:#fff1f2;
+  color:#9f1239;
+}
+
+.info-box{
+  margin-top:13px;
+  padding:13px;
+  background:#f5f3ff;
+  color:#4c1d95;
+  border-radius:11px;
+  font-size:13px;
+  line-height:1.6;
+}
+
+.voucher-grid{
+  display:grid;
+  grid-template-columns:
+    1.25fr
+    1fr
+    1fr
+    160px
+    auto;
+  gap:10px;
+  align-items:end;
+}
+
+.checkbox-line{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:12px;
+  color:#475467;
+  font-size:13px;
+}
+
+.checkbox-line input{
+  width:auto;
+}
+
+.table-wrap{
+  overflow:auto;
+}
+
+.table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:950px;
+}
+
+.table th,
+.table td{
+  padding:11px;
+  border-bottom:1px solid #edf0f4;
+  text-align:left;
+  vertical-align:top;
+  font-size:12px;
+}
+
+.table th{
+  background:#fafafa;
+  color:#667085;
+  font-size:10px;
+  text-transform:uppercase;
+}
+
+.orders-table{
+  min-width:1600px;
+}
+
+.status{
+  display:inline-block;
+  padding:5px 8px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:800;
+}
+
+.paid{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.pending{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.used{
+  background:#ede9fe;
+  color:#6d28d9;
+}
+
+.unused{
+  background:#e0f2fe;
+  color:#075985;
+}
+
+.expired{
+  background:#f3f4f6;
+  color:#374151;
+}
+
+.ready{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:15px;
+}
+
+.toolbar-left,
+.toolbar-right{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.toolbar-right input{
+  width:320px;
+}
+
+.login-card{
+  max-width:500px;
+  margin:55px auto;
+}
+
+.order-check{
+  width:auto !important;
+}
+
+@media(max-width:950px){
+
+  .voucher-grid{
+    grid-template-columns:1fr;
+  }
+
+  .toolbar-right input{
+    width:100%;
+  }
+
+}
+
+
+.stock-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+  margin-top:15px;
+}
+.stock-item{
+  border:1px solid #e7e9ef;
+  border-radius:14px;
+  padding:15px;
+  background:#fafbff;
+}
+.stock-item-title{
+  font-weight:800;
+  font-size:14px;
+  margin-bottom:10px;
+}
+.stock-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.stock-row input{
+  flex:1;
+  min-width:0;
+}
+.stock-badge{
+  display:inline-block;
+  margin-top:9px;
+  padding:5px 9px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:800;
+}
+.stock-badge.ready{
+  background:#dcfce7;
+  color:#166534;
+}
+.stock-badge.empty{
+  background:#fee2e2;
+  color:#b91c1c;
+}
+.stock-save-all{
+  margin-top:15px;
+}
+@media(max-width:1100px){
+  .stock-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:650px){
+  .stock-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+.stock-product-group{
+  margin-top:18px;
+}
+.stock-product-title{
+  font-weight:900;
+  font-size:15px;
+  color:#344054;
+  margin-bottom:9px;
+}
+.stock-product-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+@media(max-width:1100px){
+  .stock-product-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:650px){
+  .stock-product-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+.price-product-group{
+  margin-top:18px;
+}
+.price-product-title{
+  font-weight:900;
+  font-size:15px;
+  color:#344054;
+  margin-bottom:9px;
+}
+.price-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+.price-item{
+  border:1px solid #e7e9ef;
+  border-radius:14px;
+  padding:15px;
+  background:#fafbff;
+}
+.price-item-title{
+  font-weight:800;
+  font-size:14px;
+  margin-bottom:9px;
+}
+.price-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.price-row input{
+  flex:1;
+  min-width:0;
+}
+@media(max-width:1100px){
+  .price-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:650px){
+  .price-grid{grid-template-columns:1fr}
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+
+  <div>
+
+    <div class="brand">
+      Canva Premium Admin
+    </div>
+
+    <div class="subtitle">
+      Kelola order, voucher, akses, dan tim Canva
+    </div>
+
+  </div>
+
+  <button
+    id="logoutBtn"
+    class="dark hidden"
+  >
+    Keluar
+  </button>
+
+</header>
+
+
+<!-- =====================================================
+     LOGIN
+     ===================================================== -->
+
+<section
+  id="loginCard"
+  class="card login-card"
+>
+
+  <div class="section-title">
+    Login Admin
+  </div>
+
+  <div class="section-subtitle">
+    Masukkan Admin Key untuk membuka panel.
+  </div>
+
+  <label>
+    Admin Key
+  </label>
+
+  <input
+    id="adminKey"
+    type="password"
+    placeholder="Masukkan Admin Key"
+  >
+
+  <button
+    id="loginBtn"
+    style="width:100%;margin-top:15px"
+  >
+    Masuk
+  </button>
+
+  <div
+    id="loginMessage"
+    class="message"
+  ></div>
+
+</section>
+
+
+<!-- =====================================================
+     APP
+     ===================================================== -->
+
+<section
+  id="app"
+  class="hidden"
+>
+
+<div class="note">
+  Admin Key hanya digunakan untuk request ke server.
+  Jangan menaruh Admin Key secara permanen di dalam kode.
+</div>
+
+
+<!-- =====================================================
+     TIM CANVA
+     ===================================================== -->
+
+<section class="card">
+
+  <div class="section-title">
+    Tim Canva Aktif
+  </div>
+
+  <div class="section-subtitle">
+    Setiap mendapat link tim baru, ganti nama dan link di sini.
+    Pembeli berikutnya akan menggunakan tim yang sedang aktif.
+  </div>
+
+  <label>
+    Nama Tim Canva
+  </label>
+
+  <input
+    id="canvaTeamName"
+    placeholder="Contoh: MYCLIPS 826 | 20.19"
+  >
+
+  <label>
+    Link Tim Canva
+  </label>
+
+  <input
+    id="canvaInviteUrl"
+    placeholder="https://www.canva.com/brand/join?token=..."
+  >
+
+  <div
+    class="actions"
+    style="margin-top:14px"
+  >
+
+    <button
+      id="saveInviteBtn"
+    >
+      Simpan Perubahan
+    </button>
+
+  </div>
+
+  <div
+    id="inviteUpdated"
+    class="info-box"
+  >
+    Belum ada data tim.
+  </div>
+
+  <div
+    id="inviteMessage"
+    class="message"
+  ></div>
+
+</section>
+
+
+<!-- =====================================================
+     KONTROL STOK
+     ===================================================== -->
+
+<section class="card">
+
+  <div class="section-title">
+    Kontrol Stok Produk
+  </div>
+
+  <div class="section-subtitle">
+    Atur jumlah stok Canva, CapCut, dan ChatGPT. Jika stok 0,
+    paket akan dianggap <strong>STOK HABIS</strong> dan
+    website akan menonaktifkan pembeliannya.
+  </div>
+
+  <div
+    id="stockMessage"
+    class="message"
+  ></div>
+
+  <div
+    id="stockGrid"
+    class="stock-grid"
+  >
+    <div
+      style="color:#667085"
+    >
+      Memuat stok...
+    </div>
+  </div>
+
+  <div class="actions stock-save-all">
+
+    <button
+      id="refreshStockBtn"
+      class="dark"
+    >
+      Refresh Stok
+    </button>
+
+    <button
+      id="saveStockBtn"
+      class="green"
+    >
+      Simpan Semua Stok
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     PENGATURAN HARGA
+     ===================================================== -->
+
+<section class="card">
+
+  <div class="section-title">
+    Pengaturan Harga Produk
+  </div>
+
+  <div class="section-subtitle">
+    Atur harga Canva, CapCut, dan ChatGPT pada setiap paket.
+  </div>
+
+  <div
+    id="priceMessage"
+    class="message"
+  ></div>
+
+  <div id="priceGrid">
+    <div style="color:#667085">
+      Memuat harga...
+    </div>
+  </div>
+
+  <div class="actions stock-save-all">
+
+    <button
+      id="refreshPriceBtn"
+      class="dark"
+    >
+      Refresh Harga
+    </button>
+
+    <button
+      id="savePriceBtn"
+      class="green"
+    >
+      Simpan Semua Harga
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     VOUCHER
+     ===================================================== -->
+
+<section class="card">
+
+  <div class="section-title">
+    Kantong Voucher
+  </div>
+
+  <div class="section-subtitle">
+    Potongan bisa diisi bebas. Voucher dapat diberi batas
+    penggunaan atau dibuat tanpa batas.
+  </div>
+
+
+  <div class="voucher-grid">
+
+    <div>
+
+      <label>
+        Kode Voucher
+      </label>
+
+      <input
+        id="voucherCode"
+        placeholder="Contoh: IUDAHAIDIS"
+      >
+
+    </div>
+
+
+    <div>
+
+      <label>
+        Potongan (Rp)
+      </label>
+
+      <input
+        id="voucherDiscount"
+        type="number"
+        min="1"
+        placeholder="1500"
+      >
+
+    </div>
+
+
+    <div>
+
+      <label>
+        Batas Penggunaan
+      </label>
+
+      <input
+        id="voucherLimit"
+        type="number"
+        min="1"
+        placeholder="25"
+      >
+
+    </div>
+
+
+    <div>
+
+      <label>
+        Status
+      </label>
+
+      <select
+        id="voucherActive"
+      >
+
+        <option value="true">
+          Aktif
+        </option>
+
+        <option value="false">
+          Nonaktif
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <button
+      id="addVoucherBtn"
+    >
+      Tambah Voucher
+    </button>
+
+  </div>
+
+
+  <div class="checkbox-line">
+
+    <input
+      id="voucherNoLimit"
+      type="checkbox"
+    >
+
+    <label
+      for="voucherNoLimit"
+      style="margin:0;font-weight:400"
+    >
+      Tanpa batas penggunaan
+    </label>
+
+  </div>
+
+
+  <div
+    id="voucherMessage"
+    class="message"
+  ></div>
+
+
+  <div
+    class="table-wrap"
+    style="margin-top:18px"
+  >
+
+    <table class="table">
+
+      <thead>
+
+        <tr>
+
+          <th>Kode</th>
+
+          <th>Potongan</th>
+
+          <th>Digunakan</th>
+
+          <th>Batas</th>
+
+          <th>Status</th>
+
+          <th>Terakhir Diubah</th>
+
+          <th>Aksi</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody
+        id="voucherBody"
+      >
+
+        <tr>
+
+          <td
+            colspan="7"
+            style="color:#667085"
+          >
+            Memuat voucher...
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     ORDER TOOLBAR
+     ===================================================== -->
+
+<div class="toolbar">
+
+  <div class="toolbar-left">
+
+    <button
+      id="refreshBtn"
+    >
+      Refresh Pesanan
+    </button>
+
+    <button
+      id="deleteSelectedBtn"
+      class="red"
+      disabled
+    >
+      Hapus Terpilih
+    </button>
+
+    <button
+      class="dark filterBtn"
+      data-filter="ALL"
+    >
+      Semua
+    </button>
+
+    <button
+      class="dark filterBtn"
+      data-filter="PAID"
+    >
+      PAID
+    </button>
+
+    <button
+      class="dark filterBtn"
+      data-filter="PENDING"
+    >
+      PENDING
+    </button>
+
+    <button
+      class="dark filterBtn"
+      data-filter="EXPIRED"
+    >
+      EXPIRED
+    </button>
+
+  </div>
+
+
+  <div class="toolbar-right">
+
+    <select
+      id="sortOrder"
+      style="width:150px"
+    >
+
+      <option value="newest">
+        Terbaru
+      </option>
+
+      <option value="oldest">
+        Terlama
+      </option>
+
+    </select>
+
+    <input
+      id="search"
+      placeholder="Cari order, nama, email..."
+    >
+
+  </div>
+
+</div>
+
+
+<div
+  id="appMessage"
+  class="message"
+></div>
+
+
+<!-- =====================================================
+     ORDERS
+     ===================================================== -->
+
+<section class="card table-wrap">
+
+<table class="table orders-table">
+
+<thead>
+
+<tr>
+
+  <th>
+
+    <input
+      type="checkbox"
+      id="selectAll"
+      class="order-check"
+    >
+
+  </th>
+
+  <th>Order</th>
+
+  <th>Pembeli</th>
+
+  <th>Paket</th>
+
+  <th>Nominal</th>
+
+  <th>Voucher</th>
+
+  <th>Pembayaran</th>
+
+  <th>Akses</th>
+
+  <th>Tim Canva</th>
+
+  <th>Dibayar</th>
+
+  <th>Billing</th>
+
+  <th>Siklus</th>
+
+  <th>Akses Berikutnya</th>
+
+  <th>Aksi</th>
+
+</tr>
+
+</thead>
+
+
+<tbody
+  id="ordersBody"
+>
+
+<tr>
+
+  <td
+    colspan="14"
+    style="color:#667085"
+  >
+    Belum ada data.
+  </td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</section>
+
+</section>
+
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   CONFIG
+   ===================================================== */
+
+const SUPABASE_URL =
+  "https://yxybbsbjvtkpwcazairg.supabase.co";
+
+
+const ADMIN_API_URL =
+  SUPABASE_URL +
+  "/functions/v1/admin-api";
+
+
+let adminKey =
+  "";
+
+let orders =
+  [];
+
+let vouchers =
+  [];
+
+let productStock =
+  [];
+
+let productPrices =
+  [];
+
+const stockPackages = {
+  "Canva Premium": [
+    "1 Bulan",
+    "2 Bulan",
+    "3 Bulan",
+    "Paket Grup (10 akun)/Bulan"
+  ],
+  "CapCut Premium": [
+    "7 Hari",
+    "14 Hari",
+    "1 Bulan"
+  ],
+  "ChatGPT Pro": [
+    "15 Hari",
+    "30 Hari"
+  ]
+};
+
+let currentFilter =
+  "ALL";
+
+let currentSort =
+  "newest";
+
+
+const $ =
+  id =>
+    document.getElementById(
+      id
+    );
+
+
+/* =====================================================
+   HELPERS
+   ===================================================== */
+
+function esc(
+  value
+){
+
+  return String(
+    value ??
+    ""
+  ).replace(
+    /[&<>"']/g,
+    char => ({
+
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+
+    }[char])
+  );
+
+}
+
+
+function rupiah(
+  value
+){
+
+  return new Intl
+    .NumberFormat(
+      "id-ID"
+    )
+    .format(
+      Number(
+        value ||
+        0
+      )
+    );
+
+}
+
+
+function dateTime(
+  value
+){
+
+  if(
+    !value
+  ){
+
+    return "-";
+
+  }
+
+  const d =
+    new Date(
+      value
+    );
+
+  if(
+    Number.isNaN(
+      d.getTime()
+    )
+  ){
+
+    return "-";
+
+  }
+
+  return d.toLocaleString(
+    "id-ID"
+  );
+
+}
+
+
+function dateOnly(
+  value
+){
+
+  if(
+    !value
+  ){
+
+    return "-";
+
+  }
+
+  const d =
+    new Date(
+      value
+    );
+
+  if(
+    Number.isNaN(
+      d.getTime()
+    )
+  ){
+
+    return "-";
+
+  }
+
+  return d.toLocaleDateString(
+    "id-ID"
+  );
+
+}
+
+
+function message(
+  el,
+  text,
+  ok=false
+){
+
+  el.className =
+    "message " +
+    (
+      ok
+        ? "ok"
+        : "err"
+    );
+
+  el.textContent =
+    text;
+
+  el.style.display =
+    "block";
+
+}
+
+
+/* =====================================================
+   API
+   ===================================================== */
+
+async function api(
+  action,
+  extra={}
+){
+
+  const response =
+    await fetch(
+      ADMIN_API_URL,
+      {
+
+        method:
+          "POST",
+
+        headers:{
+
+          "Content-Type":
+            "application/json",
+
+          "x-admin-key":
+            adminKey
+
+        },
+
+        body:
+          JSON.stringify({
+
+            action,
+            ...extra
+
+          })
+
+      }
+    );
+
+
+  const data =
+    await response
+      .json()
+      .catch(
+        () => ({})
+      );
+
+
+  if(
+    !response.ok
+  ){
+
+    throw new Error(
+      data.error ||
+      "Request gagal."
+    );
+
+  }
+
+
+  return data;
+
+}
+
+
+/* =====================================================
+   TEAM
+   ===================================================== */
+
+async function loadTeam(){
+
+  const data =
+    await api(
+      "get_invite"
+    );
+
+
+  $("canvaTeamName")
+    .value =
+    "";
+
+  $("canvaInviteUrl")
+    .value =
+    "";
+
+
+  $("inviteUpdated")
+    .innerHTML = `
+
+      <strong>
+        Tim aktif saat ini:
+      </strong>
+
+      ${esc(
+        data.canva_team_name ||
+        "Belum ada"
+      )}
+
+      <br>
+
+      Terakhir diperbarui:
+      ${
+        data.updated_at
+          ? dateTime(
+              data.updated_at
+            )
+          : "-"
+      }
+
+    `;
+
+}
+
+
+async function saveTeam(){
+
+  const name =
+    $("canvaTeamName")
+      .value
+      .trim();
+
+
+  const url =
+    $("canvaInviteUrl")
+      .value
+      .trim();
+
+
+  try{
+
+    const data =
+      await api(
+        "update_invite",
+        {
+
+          canva_team_name:
+            name,
+
+          canva_invite_url:
+            url
+
+        }
+      );
+
+
+    message(
+      $("inviteMessage"),
+      data.message,
+      true
+    );
+
+
+    $("canvaTeamName")
+      .value =
+      "";
+
+    $("canvaInviteUrl")
+      .value =
+      "";
+
+
+    $("inviteUpdated")
+      .innerHTML = `
+
+        <strong>
+          Tim aktif saat ini:
+        </strong>
+
+        ${esc(
+          data.canva_team_name
+        )}
+
+        <br>
+
+        Terakhir diperbarui:
+        ${dateTime(
+          data.updated_at
+        )}
+
+      `;
+
+
+    await loadOrders();
+
+  }
+
+  catch(error){
+
+    message(
+      $("inviteMessage"),
+      error.message,
+      false
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   PRODUCT STOCK
+   ===================================================== */
+
+const pricePackages = {
+  "Canva Premium": [
+    "1 Bulan",
+    "2 Bulan",
+    "3 Bulan",
+    "Paket Grup (10 akun)/Bulan"
+  ],
+  "CapCut Premium": [
+    "7 Hari",
+    "14 Hari",
+    "1 Bulan"
+  ],
+  "ChatGPT Pro": [
+    "15 Hari",
+    "30 Hari"
+  ]
+};
+
+async function loadPrices(){
+
+  const data =
+    await api("list_prices");
+
+  productPrices =
+    data.prices ||
+    [];
+
+  renderPrices();
+
+}
+
+function renderPrices(){
+
+  const container =
+    $("priceGrid");
+
+  const map =
+    new Map(
+      productPrices.map(
+        item => [
+          `${item.product_name}||${item.package_name}`,
+          item
+        ]
+      )
+    );
+
+  container.innerHTML =
+    Object.entries(
+      pricePackages
+    ).map(
+      ([productName, packages]) => {
+
+        const cards =
+          packages.map(
+            packageName => {
+
+              const item =
+                map.get(
+                  `${productName}||${packageName}`
+                );
+
+              const price =
+                Number(
+                  item?.price ??
+                  0
+                );
+
+              return `
+                <div class="price-item">
+                  <div class="price-item-title">
+                    ${esc(packageName)}
+                  </div>
+                  <div class="price-row">
+                    <input
+                      type="number"
+                      min="0"
+                      step="500"
+                      data-price-product="${esc(productName)}"
+                      data-price-package="${esc(packageName)}"
+                      value="${price}"
+                    >
+                  </div>
+                </div>
+              `;
+            }
+          ).join("");
+
+        return `
+          <div class="price-product-group">
+            <div class="price-product-title">
+              ${esc(productName)}
+            </div>
+            <div class="price-grid">
+              ${cards}
+            </div>
+          </div>
+        `;
+      }
+    ).join("");
+
+}
+
+async function savePrices(){
+
+  const inputs =
+    Array.from(
+      document.querySelectorAll(
+        "[data-price-product][data-price-package]"
+      )
+    );
+
+  try{
+
+    $("savePriceBtn").disabled = true;
+
+    for(
+      const input
+      of inputs
+    ){
+
+      const price =
+        Number(input.value);
+
+      if(
+        !Number.isInteger(price) ||
+        price < 0
+      ){
+        throw new Error(
+          "Harga harus berupa angka bulat minimal 0."
+        );
+      }
+
+      await api(
+        "update_price",
+        {
+          product_name:
+            input.dataset.priceProduct,
+
+          package_name:
+            input.dataset.pricePackage,
+
+          price:price,
+
+          active:true
+        }
+      );
+    }
+
+    message(
+      $("priceMessage"),
+      "Semua harga berhasil disimpan.",
+      true
+    );
+
+    await loadPrices();
+
+  }catch(error){
+
+    message(
+      $("priceMessage"),
+      error.message,
+      false
+    );
+
+  }finally{
+
+    $("savePriceBtn").disabled = false;
+
+  }
+
+}
+
+async function loadStock(){
+
+  const data =
+    await api(
+      "list_stock"
+    );
+
+  productStock =
+    data.stock ||
+    [];
+
+  renderStock();
+
+}
+
+
+function renderStock(){
+
+  const container =
+    $("stockGrid");
+
+  const map =
+    new Map(
+      productStock.map(
+        item => [
+          `${item.product_name}||${item.package_name}`,
+          item
+        ]
+      )
+    );
+
+  container.innerHTML =
+    Object.entries(stockPackages)
+      .map(
+        ([productName, packages]) => {
+
+          const cards =
+            packages
+              .map(
+                packageName => {
+
+                  const item =
+                    map.get(
+                      `${productName}||${packageName}`
+                    );
+
+                  const stock =
+                    Number(
+                      item?.stock ??
+                      0
+                    );
+
+                  const active =
+                    item?.active !==
+                    false;
+
+                  const empty =
+                    !active ||
+                    stock <=
+                    0;
+
+                  return `
+
+                    <div
+                      class="stock-item"
+                    >
+
+                      <div
+                        class="stock-item-title"
+                      >
+                        ${esc(
+                          packageName
+                        )}
+                      </div>
+
+                      <div
+                        class="stock-row"
+                      >
+
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          data-stock-product="${esc(
+                            productName
+                          )}"
+                          data-stock-package="${esc(
+                            packageName
+                          )}"
+                          value="${stock}"
+                        >
+
+                      </div>
+
+                      <span
+                        class="stock-badge ${
+                          empty
+                            ? "empty"
+                            : "ready"
+                        }"
+                      >
+                        ${
+                          empty
+                            ? "STOK HABIS"
+                            : "TERSEDIA"
+                        }
+                      </span>
+
+                    </div>
+
+                  `;
+
+                }
+              )
+              .join("");
+
+          return `
+
+            <div
+              class="stock-product-group"
+            >
+
+              <div
+                class="stock-product-title"
+              >
+                ${esc(
+                  productName
+                )}
+              </div>
+
+              <div
+                class="stock-product-grid"
+              >
+                ${cards}
+              </div>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+}
+
+async function saveStock(){
+
+  const inputs =
+    Array.from(
+      document.querySelectorAll(
+        "[data-stock-product][data-stock-package]"
+      )
+    );
+
+  try{
+
+    $("saveStockBtn")
+      .disabled =
+      true;
+
+    for(
+      const input
+      of inputs
+    ){
+
+      const productName =
+        input.dataset
+          .stockProduct;
+
+      const packageName =
+        input.dataset
+          .stockPackage;
+
+      const stock =
+        Number(
+          input.value
+        );
+
+      if(
+        !Number.isInteger(
+          stock
+        ) ||
+        stock <
+          0
+      ){
+
+        throw new Error(
+          "Stok harus berupa angka bulat minimal 0."
+        );
+
+      }
+
+      await api(
+        "update_stock",
+        {
+          product_name:
+            productName,
+
+          package_name:
+            packageName,
+
+          stock:
+            stock,
+
+          active:
+            stock >
+            0
+        }
+      );
+
+    }
+
+    message(
+      $("stockMessage"),
+      "Semua stok berhasil disimpan.",
+      true
+    );
+
+    await loadStock();
+
+  }
+
+  catch(error){
+
+    message(
+      $("stockMessage"),
+      error.message,
+      false
+    );
+
+  }
+
+  finally{
+
+    $("saveStockBtn")
+      .disabled =
+      false;
+
+  }
+
+}
+
+
+/* =====================================================
+   VOUCHER
+   ===================================================== */
+
+async function loadVouchers(){
+
+  const data =
+    await api(
+      "list_vouchers"
+    );
+
+
+  vouchers =
+    data.vouchers ||
+    [];
+
+
+  renderVouchers();
+
+}
+
+
+function renderVouchers(){
+
+  const body =
+    $("voucherBody");
+
+
+  if(
+    !vouchers.length
+  ){
+
+    body.innerHTML = `
+
+      <tr>
+
+        <td
+          colspan="7"
+          style="color:#667085"
+        >
+          Belum ada voucher.
+        </td>
+
+      </tr>
+
+    `;
+
+    return;
+
+  }
+
+
+  body.innerHTML =
+    vouchers
+      .map(
+        voucher => {
+
+          const count =
+            Number(
+              voucher.usage_count ||
+              0
+            );
+
+
+          const limit =
+            voucher.usage_limit;
+
+
+          const full =
+            limit !== null &&
+            count >=
+              Number(
+                limit
+              );
+
+
+          let statusHtml;
+
+
+          if(
+            !voucher.active
+          ){
+
+            statusHtml = `
+
+              <span class="status expired">
+                NONAKTIF
+              </span>
+
+            `;
+
+          }
+
+          else if(
+            full
+          ){
+
+            statusHtml = `
+
+              <span class="status pending">
+                HABIS
+              </span>
+
+            `;
+
+          }
+
+          else{
+
+            statusHtml = `
+
+              <span class="status paid">
+                AKTIF
+              </span>
+
+            `;
+
+          }
+
+
+          return `
+
+            <tr>
+
+              <td>
+
+                <strong>
+                  ${esc(
+                    voucher.code
+                  )}
+                </strong>
+
+              </td>
+
+              <td>
+                Rp${rupiah(
+                  voucher.discount_amount
+                )}
+              </td>
+
+              <td>
+                ${count}x
+              </td>
+
+              <td>
+                ${
+                  limit === null
+                    ? "∞"
+                    : limit + "x"
+                }
+              </td>
+
+              <td>
+                ${statusHtml}
+              </td>
+
+              <td>
+                ${dateTime(
+                  voucher.updated_at ||
+                  voucher.created_at
+                )}
+              </td>
+
+              <td>
+
+                <div class="actions">
+
+                  <button
+                    class="small dark"
+                    onclick="editVoucher('${esc(
+                      voucher.id
+                    )}')"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    class="small ${
+                      voucher.active
+                        ? "dark"
+                        : "green"
+                    }"
+                    onclick="toggleVoucher(
+                      '${esc(
+                        voucher.id
+                      )}',
+                      ${!voucher.active}
+                    )"
+                  >
+                    ${
+                      voucher.active
+                        ? "Nonaktifkan"
+                        : "Aktifkan"
+                    }
+                  </button>
+
+                  <button
+                    class="small red"
+                    onclick="deleteVoucher('${esc(
+                      voucher.id
+                    )}')"
+                  >
+                    Hapus
+                  </button>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+          `;
+
+        }
+      )
+      .join("");
+
+}
+
+
+async function addVoucher(){
+
+  const code =
+    $("voucherCode")
+      .value
+      .trim()
+      .toUpperCase();
+
+
+  const discount =
+    Number(
+      $("voucherDiscount")
+        .value
+    );
+
+
+  const noLimit =
+    $("voucherNoLimit")
+      .checked;
+
+
+  const limit =
+    noLimit
+      ? null
+      : Number(
+          $("voucherLimit")
+            .value
+        );
+
+
+  const active =
+    $("voucherActive")
+      .value ===
+      "true";
+
+
+  try{
+
+    const data =
+      await api(
+        "create_voucher",
+        {
+
+          code,
+          discount_amount:
+            discount,
+
+          usage_limit:
+            limit,
+
+          active
+
+        }
+      );
+
+
+    message(
+      $("voucherMessage"),
+      data.message,
+      true
+    );
+
+
+    $("voucherCode")
+      .value = "";
+
+    $("voucherDiscount")
+      .value = "";
+
+    $("voucherLimit")
+      .value = "";
+
+    $("voucherNoLimit")
+      .checked = false;
+
+
+    await loadVouchers();
+
+  }
+
+  catch(error){
+
+    message(
+      $("voucherMessage"),
+      error.message,
+      false
+    );
+
+  }
+
+}
+
+
+async function editVoucher(
+  id
+){
+
+  const voucher =
+    vouchers.find(
+      item =>
+        item.id === id
+    );
+
+
+  if(
+    !voucher
+  ){
+
+    return;
+
+  }
+
+
+  const discountInput =
+    prompt(
+      "Potongan voucher (Rp):",
+      voucher.discount_amount
+    );
+
+
+  if(
+    discountInput ===
+    null
+  ){
+
+    return;
+
+  }
+
+
+  const limitInput =
+    prompt(
+      "Batas penggunaan.\nKosongkan untuk tanpa batas:",
+      voucher.usage_limit === null
+        ? ""
+        : voucher.usage_limit
+    );
+
+
+  if(
+    limitInput ===
+    null
+  ){
+
+    return;
+
+  }
+
+
+  const countInput =
+    prompt(
+      "Sudah digunakan berapa kali?",
+      voucher.usage_count ||
+      0
+    );
+
+
+  if(
+    countInput ===
+    null
+  ){
+
+    return;
+
+  }
+
+
+  const active =
+    confirm(
+      "OK = Aktif\nCancel = Nonaktif"
+    );
+
+
+  try{
+
+    await api(
+      "update_voucher",
+      {
+
+        voucher_id:
+          id,
+
+        code:
+          voucher.code,
+
+        discount_amount:
+          Number(
+            discountInput
+          ),
+
+        usage_limit:
+          limitInput.trim() === ""
+            ? null
+            : Number(
+                limitInput
+              ),
+
+        usage_count:
+          Number(
+            countInput
+          ),
+
+        active
+
+      }
+    );
+
+
+    await loadVouchers();
+
+
+    message(
+      $("voucherMessage"),
+      "Voucher berhasil diperbarui.",
+      true
+    );
+
+  }
+
+  catch(error){
+
+    message(
+      $("voucherMessage"),
+      error.message,
+      false
+    );
+
+  }
+
+}
+
+
+async function toggleVoucher(
+  id,
+  active
+){
+
+  try{
+
+    await api(
+      "toggle_voucher",
+      {
+
+        voucher_id:
+          id,
+
+        active:
+          active
+
+      }
+    );
+
+
+    await loadVouchers();
+
+  }
+
+  catch(error){
+
+    message(
+      $("voucherMessage"),
+      error.message,
+      false
+    );
+
+  }
+
+}
+
+
+async function deleteVoucher(
+  id
+){
+
+  if(
+    !confirm(
+      "Hapus voucher ini?"
+    )
+  ){
+
+    return;
+
+  }
+
+
+  try{
+
+    await api(
+      "delete_voucher",
+      {
+
+        voucher_id:
+          id
+
+      }
+    );
+
+
+    await loadVouchers();
+
+  }
+
+  catch(error){
+
+    message(
+      $("voucherMessage"),
+      error.message,
+      false
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   ORDERS
+   ===================================================== */
+
+async function loadOrders(){
+
+  const data =
+    await api(
+      "list"
+    );
+
+
+  orders =
+    data.orders ||
+    [];
+
+
+  renderOrders();
+
+}
+
+
+function billingText(
+  order
+){
+
+  if(
+    !order.billing_start_at ||
+    !order.billing_end_at
+  ){
+
+    return "-";
+
+  }
+
+
+  return `
+
+    ${dateOnly(
+      order.billing_start_at
+    )}
+
+    <br>
+
+    <span
+      style="color:#667085"
+    >
+      s.d.
+    </span>
+
+    ${dateOnly(
+      order.billing_end_at
+    )}
+
+  `;
+
+}
+
+
+function orderStatus(
+  value
+){
+
+  const status =
+    String(
+      value ||
+      ""
+    ).toUpperCase();
+
+
+  if(
+    status ===
+    "PAID"
+  ){
+
+    return `
+      <span class="status paid">
+        PAID
+      </span>
+    `;
+
+  }
+
+
+  if(
+    status ===
+    "PENDING"
+  ){
+
+    return `
+      <span class="status pending">
+        PENDING
+      </span>
+    `;
+
+  }
+
+
+  if(
+    status ===
+    "USED"
+  ){
+
+    return `
+      <span class="status used">
+        USED
+      </span>
+    `;
+
+  }
+
+
+  if(
+    status ===
+    "UNUSED"
+  ){
+
+    return `
+      <span class="status unused">
+        UNUSED
+      </span>
+    `;
+
+  }
+
+
+  if(
+    status ===
+    "EXPIRED"
+  ){
+
+    return `
+      <span class="status expired">
+        EXPIRED
+      </span>
+    `;
+
+  }
+
+
+  return `
+    <span class="status expired">
+      ${esc(
+        status ||
+        "-"
+      )}
+    </span>
+  `;
+
+}
+
+
+function accessStatus(
+  order
+){
+
+  const now =
+    new Date();
+
+
+  if(
+    String(
+      order.payment_status ||
+      ""
+    ).toUpperCase() !==
+    "PAID"
+  ){
+
+    return orderStatus(
+      order.payment_status
+    );
+
+  }
+
+
+  if(
+    order.billing_end_at &&
+    now >
+      new Date(
+        order.billing_end_at
+      )
+  ){
+
+    return `
+
+      <span class="status expired">
+        EXPIRED
+      </span>
+
+    `;
+
+  }
+
+
+  const cycle =
+    Number(
+      order.access_cycle ||
+      0
+    );
+
+
+  if(
+    String(
+      order.access_status ||
+      ""
+    ).toUpperCase() ===
+    "UNUSED"
+  ){
+
+    return `
+
+      <span class="status unused">
+        UNUSED
+      </span>
+
+    `;
+
+  }
+
+
+  if(
+    cycle ===
+    0
+  ){
+
+    return `
+
+      <span class="status unused">
+        UNUSED
+      </span>
+
+    `;
+
+  }
+
+
+  if(
+    order.next_access_at &&
+    now >=
+      new Date(
+        order.next_access_at
+      )
+  ){
+
+    return `
+
+      <span class="status ready">
+        SIAP LAGI
+      </span>
+
+    `;
+
+  }
+
+
+  return `
+
+    <span class="status used">
+      USED
+    </span>
+
+  `;
+
+}
+
+
+function nextAccess(
+  order
+){
+
+  const now =
+    new Date();
+
+
+  if(
+    order.billing_end_at &&
+    now >
+      new Date(
+        order.billing_end_at
+      )
+  ){
+
+    return "Berakhir";
+
+  }
+
+
+  if(
+    Number(
+      order.duration_months ||
+      1
+    ) <=
+    1
+  ){
+
+    return "-";
+
+  }
+
+
+  if(
+    Number(
+      order.access_cycle ||
+      0
+    ) >=
+    Number(
+      order.duration_months ||
+      1
+    )
+  ){
+
+    return "Selesai";
+
+  }
+
+
+  if(
+    order.next_access_at
+  ){
+
+    return dateTime(
+      order.next_access_at
+    );
+
+  }
+
+
+  return "-";
+
+}
+
+
+function renderOrders(){
+
+  const keyword =
+    $("search")
+      .value
+      .trim()
+      .toLowerCase();
+
+
+  let list =
+    orders.filter(
+      order => {
+
+        const payment =
+          String(
+            order.payment_status ||
+            ""
+          ).toUpperCase();
+
+
+        const filterOk =
+          currentFilter ===
+            "ALL" ||
+          currentFilter ===
+            payment;
+
+
+        const searchText =
+          [
+
+            order.order_code,
+
+            order.customer_name,
+
+            order.customer_email,
+
+            order.product_name,
+
+            order.voucher_code,
+
+            order.canva_team_name
+
+          ]
+          .join(" ")
+          .toLowerCase();
+
+
+        return (
+          filterOk &&
+          searchText.includes(
+            keyword
+          )
+        );
+
+      }
+    );
+
+
+  list.sort(
+    (a,b) => {
+
+      const A =
+        new Date(
+          a.created_at ||
+          0
+        ).getTime();
+
+
+      const B =
+        new Date(
+          b.created_at ||
+          0
+        ).getTime();
+
+
+      return currentSort ===
+        "newest"
+
+        ? B - A
+
+        : A - B;
+
+    }
+  );
+
+
+  if(
+    !list.length
+  ){
+
+    $("ordersBody")
+      .innerHTML = `
+
+        <tr>
+
+          <td
+            colspan="14"
+            style="color:#667085"
+          >
+            Tidak ada pesanan.
+          </td>
+
+        </tr>
+
+      `;
+
+
+    updateDeleteButton();
+
+    return;
+
+  }
+
+
+  $("ordersBody")
+    .innerHTML =
+    list
+      .map(
+        order => {
+
+          const paid =
+            String(
+              order.payment_status ||
+              ""
+            ).toUpperCase() ===
+            "PAID";
+
+
+          const usedCycle =
+            Number(
+              order.access_cycle ||
+              0
+            );
+
+
+          return `
+
+            <tr>
+
+              <td>
+
+                <input
+                  type="checkbox"
+                  class="order-check orderCheck"
+                  value="${esc(
+                    order.order_code
+                  )}"
+                >
+
+              </td>
+
+
+              <td>
+
+                <strong>
+                  ${esc(
+                    order.order_code
+                  )}
+                </strong>
+
+                <br>
+
+                <span
+                  style="color:#667085"
+                >
+                  ${dateTime(
+                    order.created_at
+                  )}
+                </span>
+
+              </td>
+
+
+              <td>
+
+                <strong>
+                  ${esc(
+                    order.customer_name ||
+                    "-"
+                  )}
+                </strong>
+
+                <br>
+
+                ${esc(
+                  order.customer_email ||
+                  "-"
+                )}
+
+              </td>
+
+
+              <td>
+
+                ${esc(
+                  order.product_name ||
+                  "-"
+                )}
+
+              </td>
+
+
+              <td>
+
+                Rp${rupiah(
+                  order.amount
+                )}
+
+                ${
+                  order.discount_amount
+
+                    ? `
+
+                      <br>
+
+                      <span
+                        style="color:#667085"
+                      >
+                        Setelah voucher:
+                        Rp${rupiah(
+                          order.final_amount
+                        )}
+                      </span>
+
+                    `
+
+                    : ""
+
+                }
+
+              </td>
+
+
+              <td>
+
+                ${
+                  order.voucher_code
+
+                    ? `
+
+                      <strong>
+                        ${esc(
+                          order.voucher_code
+                        )}
+                      </strong>
+
+                      <br>
+
+                      -Rp${rupiah(
+                        order.discount_amount
+                      )}
+
+                    `
+
+                    : "-"
+
+                }
+
+              </td>
+
+
+              <td>
+
+                ${orderStatus(
+                  order.payment_status
+                )}
+
+                <br>
+
+                <span
+                  style="color:#667085"
+                >
+                  ${esc(
+                    order.payment_method ||
+                    ""
+                  )}
+                </span>
+
+              </td>
+
+
+              <td>
+
+                ${accessStatus(
+                  order
+                )}
+
+                ${
+                  usedCycle > 0
+                    ? `
+                      <br>
+                      <span
+                        style="color:#667085"
+                      >
+                        Siklus ${usedCycle}
+                        /
+                        ${
+                          String(
+                            order.access_status ||
+                            ""
+                          ).toUpperCase() ===
+                          "UNUSED"
+                            ? 0
+                            : usedCycle
+                        }
+                      </span>
+                    `
+                    : ""
+                }
+
+              </td>
+
+
+              <td>
+
+                ${esc(
+                  order.canva_team_name ||
+                  "-"
+                )}
+
+              </td>
+
+
+              <td>
+
+                ${dateTime(
+                  order.paid_at
+                )}
+
+              </td>
+
+
+              <td>
+
+                ${billingText(
+                  order
+                )}
+
+              </td>
+
+
+              <td>
+                ${usedCycle}
+                /
+                ${
+                  String(
+                    order.access_status ||
+                    ""
+                  ).toUpperCase() ===
+                  "UNUSED"
+                    ? 0
+                    : usedCycle
+                }
+              </td>
+
+
+              <td>
+
+                ${nextAccess(
+                  order
+                )}
+
+              </td>
+
+
+              <td>
+
+                ${
+                  paid
+
+                    ? `
+
+                      <button
+                        class="small red"
+                        onclick="resetAccess('${esc(
+                          order.order_code
+                        )}')"
+                      >
+                        Reset
+                      </button>
+
+                    `
+
+                    : "-"
+                }
+
+              </td>
+
+            </tr>
+
+          `;
+
+        }
+      )
+      .join("");
+
+
+  attachChecks();
+
+}
+
+
+function attachChecks(){
+
+  document
+    .querySelectorAll(
+      ".orderCheck"
+    )
+    .forEach(
+      check => {
+
+        check.addEventListener(
+          "change",
+          updateDeleteButton
+        );
+
+      }
+    );
+
+
+  updateDeleteButton();
+
+}
+
+
+function updateDeleteButton(){
+
+  const count =
+    document
+      .querySelectorAll(
+        ".orderCheck:checked"
+      )
+      .length;
+
+
+  $("deleteSelectedBtn")
+    .disabled =
+    count === 0;
+
+}
+
+
+/* =====================================================
+   RESET ACCESS
+   ===================================================== */
+
+async function resetAccess(
+  orderCode
+){
+
+  if(
+    !confirm(
+      "Reset akses order " +
+      orderCode +
+      "?"
+    )
+  ){
+
+    return;
+
+  }
+
+
+  try{
+
+    const data =
+      await api(
+        "reset",
+        {
+
+          order_code:
+            orderCode
+
+        }
+      );
+
+
+    message(
+      $("appMessage"),
+      data.message,
+      true
+    );
+
+
+    await loadOrders();
+
+  }
+
+  catch(error){
+
+    message(
+      $("appMessage"),
+      error.message,
+      false
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   DELETE ORDER
+   ===================================================== */
+
+$("deleteSelectedBtn")
+  .addEventListener(
+    "click",
+    async () => {
+
+      const selected =
+        Array
+          .from(
+            document.querySelectorAll(
+              ".orderCheck:checked"
+            )
+          )
+          .map(
+            item =>
+              item.value
+          );
+
+
+      if(
+        !selected.length
+      ){
+
+        return;
+
+      }
+
+
+      const password =
+        prompt(
+          "Masukkan password penghapusan:"
+        );
+
+
+      if(
+        password ===
+        null
+      ){
+
+        return;
+
+      }
+
+
+      try{
+
+        const data =
+          await api(
+            "delete_orders",
+            {
+
+              order_codes:
+                selected,
+
+              delete_password:
+                password
+
+            }
+          );
+
+
+        message(
+          $("appMessage"),
+          data.message,
+          true
+        );
+
+
+        await loadOrders();
+
+      }
+
+      catch(error){
+
+        message(
+          $("appMessage"),
+          error.message,
+          false
+        );
+
+      }
+
+    }
+  );
+
+
+/* =====================================================
+   SELECT ALL
+   ===================================================== */
+
+$("selectAll")
+  .addEventListener(
+    "change",
+    () => {
+
+      const checked =
+        $("selectAll")
+          .checked;
+
+
+      document
+        .querySelectorAll(
+          ".orderCheck"
+        )
+        .forEach(
+          item => {
+
+            item.checked =
+              checked;
+
+          }
+        );
+
+
+      updateDeleteButton();
+
+    }
+  );
+
+
+/* =====================================================
+   LOGIN
+   ===================================================== */
+
+$("loginBtn")
+  .addEventListener(
+    "click",
+    async () => {
+
+      const key =
+        $("adminKey")
+          .value
+          .trim();
+
+
+      if(
+        !key
+      ){
+
+        message(
+          $("loginMessage"),
+          "Admin Key wajib diisi.",
+          false
+        );
+
+        return;
+
+      }
+
+
+      adminKey =
+        key;
+
+
+      $("loginBtn")
+        .disabled =
+        true;
+
+
+      try{
+
+        await loadTeam();
+
+        await loadStock();
+
+        await loadPrices();
+
+        await loadVouchers();
+
+        await loadOrders();
+
+
+        $("loginCard")
+          .classList
+          .add(
+            "hidden"
+          );
+
+
+        $("app")
+          .classList
+          .remove(
+            "hidden"
+          );
+
+
+        $("logoutBtn")
+          .classList
+          .remove(
+            "hidden"
+          );
+
+      }
+
+      catch(error){
+
+        adminKey =
+          "";
+
+        message(
+          $("loginMessage"),
+          error.message,
+          false
+        );
+
+      }
+
+      finally{
+
+        $("loginBtn")
+          .disabled =
+          false;
+
+      }
+
+    }
+  );
+
+
+$("adminKey")
+  .addEventListener(
+    "keydown",
+    event => {
+
+      if(
+        event.key ===
+        "Enter"
+      ){
+
+        $("loginBtn")
+          .click();
+
+      }
+
+    }
+  );
+
+
+/* =====================================================
+   LOGOUT
+   ===================================================== */
+
+$("logoutBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      adminKey =
+        "";
+
+      orders =
+        [];
+
+      vouchers =
+        [];
+
+      productStock =
+        [];
+
+      productPrices =
+        [];
+
+
+      $("app")
+        .classList
+        .add(
+          "hidden"
+        );
+
+
+      $("loginCard")
+        .classList
+        .remove(
+          "hidden"
+        );
+
+
+      $("logoutBtn")
+        .classList
+        .add(
+          "hidden"
+        );
+
+    }
+  );
+
+
+/* =====================================================
+   EVENTS
+   ===================================================== */
+
+$("saveInviteBtn")
+  .addEventListener(
+    "click",
+    saveTeam
+  );
+
+
+$("addVoucherBtn")
+  .addEventListener(
+    "click",
+    addVoucher
+  );
+
+
+$("refreshStockBtn")
+  .addEventListener(
+    "click",
+    loadStock
+  );
+
+
+$("saveStockBtn")
+  .addEventListener(
+    "click",
+    saveStock
+  );
+
+
+/* =====================================================
+   PRICE EVENTS
+   ===================================================== */
+
+$("refreshPriceBtn")
+  .addEventListener(
+    "click",
+    async () => {
+
+      try{
+
+        await loadPrices();
+
+        message(
+          $("priceMessage"),
+          "Harga berhasil diperbarui dari database.",
+          true
+        );
+
+      }
+
+      catch(error){
+
+        message(
+          $("priceMessage"),
+          error.message,
+          false
+        );
+
+      }
+
+    }
+  );
+
+
+$("savePriceBtn")
+  .addEventListener(
+    "click",
+    savePrices
+  );
+
+
+$("refreshBtn")
+  .addEventListener(
+    "click",
+    async () => {
+
+      await loadTeam();
+
+      await loadStock();
+
+      await loadPrices();
+
+      await loadVouchers();
+
+      await loadOrders();
+
+    }
+  );
+
+
+$("search")
+  .addEventListener(
+    "input",
+    renderOrders
+  );
+
+
+$("sortOrder")
+  .addEventListener(
+    "change",
+    () => {
+
+      currentSort =
+        $("sortOrder")
+          .value;
+
+      renderOrders();
+
+    }
+  );
+
+
+document
+  .querySelectorAll(
+    ".filterBtn"
+  )
+  .forEach(
+    btn => {
+
+      btn.addEventListener(
+        "click",
+        () => {
+
+          currentFilter =
+            btn.dataset.filter;
+
+          renderOrders();
+
+        }
+      );
+
+    }
+  );
+
+</script>
+
+</body>
+
+</html>
 
