@@ -332,10 +332,13 @@
 }
 
 #db-access-page{
+  position:fixed;
+  inset:0;
   width:100vw;
   height:100vh;
-  min-height:100dvh;
+  height:100dvh;
   overflow:hidden;
+  z-index:70;
 }
 
 #db-access-page > .min-h-full{
@@ -349,15 +352,18 @@
   justify-content:center;
   padding:1rem;
   box-sizing:border-box;
+  overflow:hidden;
 }
 
 #db-access-page .card-texture{
   position:relative;
   z-index:2;
-  width:100%;
+  width:min(560px, calc(100vw - 2rem));
   max-height:calc(100vh - 2rem);
   max-height:calc(100dvh - 2rem);
   overflow-y:auto;
+  overflow-x:hidden;
+  margin:auto;
 }
 
 </style>
@@ -2257,6 +2263,7 @@ function clearReceiptSnapshot(){
   try{
     sessionStorage.removeItem('myclips_receipt_snapshot');
     sessionStorage.removeItem('myclips_receipt_available');
+    sessionStorage.removeItem('myclips_restore_receipt_once');
   }catch(_){ }
 }
 
@@ -2465,6 +2472,9 @@ async function waitForAccess(orderCode,email,paymentData){
           button.addEventListener(
             'click',
             ()=>{
+              try{
+                sessionStorage.setItem('myclips_restore_receipt_once','1');
+              }catch(_){}
               clearCanvaReturnFlags();
             }
           );
@@ -2491,6 +2501,9 @@ async function waitForAccess(orderCode,email,paymentData){
 
           button.onclick =
             ()=>{
+              try{
+                sessionStorage.setItem('myclips_restore_receipt_once','1');
+              }catch(_){}
               clearCanvaReturnFlags();
             };
 
@@ -2885,51 +2898,52 @@ async function loadAccessPage(){
 }
 
 if(accessToken){
-  // Saat URL membawa token akses, halaman produk disembunyikan supaya
-  // klik tombol Akses Canva selalu membuka halaman akses, bukan produk.
+  // Saat URL membawa token akses, sembunyikan Products dan kunci
+  // scroll halaman utama. Halaman akses menjadi satu viewport penuh.
   try{
     document.querySelector('header')?.classList.add('hidden');
     document.querySelector('main')?.classList.add('hidden');
     document.querySelector('footer')?.classList.add('hidden');
-  }catch(_){ }
+
+    const pageRoot=document.body.firstElementChild;
+    document.body.classList.add('access-mode-lock');
+    document.body.style.overflow='hidden';
+
+    if(pageRoot){
+      pageRoot.style.overflow='hidden';
+      pageRoot.style.height='100vh';
+      pageRoot.style.height='100dvh';
+    }
+  }catch(_){}
 }
 
 loadAccessPage();
 
 // ============================================================
-// NAVIGASI: dari halaman akses kembali ke struk pembayaran
+// KEMBALI DARI HALAMAN AKSES
 // ============================================================
-if(accessToken){
+// Tidak memakai pushState/popstate lagi.
+// Browser back akan kembali ke URL struk (tanpa ?access=...).
+// Penanda restore_receipt_once membuat struk hanya dipulihkan
+// saat kembali dari halaman akses, bukan setiap refresh.
+if(!accessToken){
   try{
-    history.pushState(
-      {myclipsAccessGuard:true},
-      '',
-      window.location.href
-    );
-  }catch(_){ }
-}
+    const shouldRestore =
+      sessionStorage.getItem('myclips_restore_receipt_once') === '1';
 
-window.addEventListener('popstate',()=>{
-  if(!accessToken) return;
+    if(shouldRestore){
+      const restored=restoreReceiptSnapshot();
 
-  try{
-    sessionStorage.removeItem('myclips_refresh_after_canva');
-    sessionStorage.removeItem('myclips_left_access_page');
+      // Konsumsi penanda setelah SATU kali pemulihan.
+      sessionStorage.removeItem('myclips_restore_receipt_once');
 
-    const restored=restoreReceiptSnapshot();
-    const baseUrl=window.location.origin + window.location.pathname;
-
-    history.replaceState(
-      {myclipsReceiptRestored:true},
-      '',
-      baseUrl
-    );
-
-    if(!restored){
-      document.getElementById('db-access-page')?.classList.add('hidden');
+      if(!restored){
+        sessionStorage.removeItem('myclips_receipt_snapshot');
+        sessionStorage.removeItem('myclips_receipt_available');
+      }
     }
-  }catch(_){ }
-});
+  }catch(_){}
+}
 
 // ===== CONSUME ACCESS / LANJUT KE CANVA =====
 // Handler ini sengaja dipasang setelah loadAccessPage() supaya
