@@ -325,6 +325,22 @@
 
 
 .package-option.stock-loading{opacity:.72;cursor:wait !important;pointer-events:none;}
+
+.access-page-hearts{
+  z-index: 0;
+  pointer-events: none;
+}
+
+#db-access-page > .min-h-full{
+  position: relative;
+  z-index: 1;
+}
+
+#db-access-page .card-texture{
+  position: relative;
+  z-index: 2;
+}
+
 </style>
   <style>body { box-sizing: border-box; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
@@ -667,7 +683,19 @@
    </div>
 
    <!-- Canva access page -->
-   <div id="db-access-page" class="fixed inset-0 z-[70] hidden overflow-auto bg-[#FFF0F5]">
+   <div id="db-access-page" class="fixed inset-0 z-[70] hidden overflow-auto texture-bg relative">
+     <div class="floating-hearts access-page-hearts">
+       <span class="heart" style="left: 6%; top: 12%; animation-delay: 0s;">💕</span>
+       <span class="heart" style="left: 18%; top: 72%; animation-delay: 2s;">💗</span>
+       <span class="heart" style="left: 30%; top: 28%; animation-delay: 4s;">💖</span>
+       <span class="heart" style="left: 46%; top: 82%; animation-delay: 1s;">💕</span>
+       <span class="heart" style="left: 62%; top: 16%; animation-delay: 3s;">💗</span>
+       <span class="heart" style="left: 76%; top: 52%; animation-delay: 5s;">💖</span>
+       <span class="heart" style="left: 88%; top: 78%; animation-delay: 2.5s;">💕</span>
+       <span class="heart" style="left: 94%; top: 32%; animation-delay: 4.5s;">💗</span>
+       <span class="heart" style="left: 10%; top: 44%; animation-delay: 6s;">💖</span>
+       <span class="heart" style="left: 70%; top: 68%; animation-delay: 7s;">💕</span>
+     </div>
     <div class="min-h-full flex items-center justify-center p-4">
      <div class="card-texture rounded-3xl shadow-2xl w-full max-w-xl p-6 border border-pink-100">
       <div class="text-center mb-5">
