@@ -2392,23 +2392,6 @@ async function waitForAccess(orderCode,email,paymentData){
             button
           );
 
-          const code =
-            document.createElement('div');
-
-          code.id =
-            codeId;
-
-          code.className =
-            'mt-2 text-sm text-gray-700';
-
-          code.innerHTML =
-            '<b>Kode Order:</b><br>' +
-            `<span class="break-all">${esc(order.order_code || orderCode || '-')}</span>`;
-
-          targetContainer.appendChild(
-            code
-          );
-
         }else{
 
           button.href =
@@ -2419,29 +2402,6 @@ async function waitForAccess(orderCode,email,paymentData){
               clearCanvaReturnFlags();
             };
 
-          let code =
-            document.getElementById(
-              codeId
-            );
-
-          if(!code){
-            code =
-              document.createElement('div');
-
-            code.id =
-              codeId;
-
-            code.className =
-              'mt-2 text-sm text-gray-700';
-
-            targetContainer.appendChild(
-              code
-            );
-          }
-
-          code.innerHTML =
-            '<b>Kode Order:</b><br>' +
-            `<span class="break-all">${esc(order.order_code || orderCode || '-')}</span>`;
         }
 
         return true;
