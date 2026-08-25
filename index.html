@@ -1954,6 +1954,9 @@ async function checkoutCanva(){
       }
     }
 
+    // Persistir tampilan struk terbaru, termasuk tombol Akses Canva.
+    saveReceiptSnapshot();
+
     /*
      * Refresh stok sekali lagi setelah webhook/access processing
      * agar perubahan stok terbaru langsung terbaca.
@@ -2388,7 +2391,7 @@ async function waitForAccess(orderCode,email,paymentData){
 
   for(
     let attempt = 1;
-    attempt <= 12;
+    attempt <= 30;
     attempt++
   ){
 
@@ -2444,7 +2447,7 @@ async function waitForAccess(orderCode,email,paymentData){
       if(
         order &&
         order.access_url &&
-        order.can_join !== false
+        order.access_token
       ){
 
         let button =
@@ -2494,6 +2497,9 @@ async function waitForAccess(orderCode,email,paymentData){
             button
           );
 
+          // Simpan ulang struk setelah tombol Akses Canva muncul.
+          saveReceiptSnapshot();
+
         }else{
 
           button.href =
@@ -2506,6 +2512,8 @@ async function waitForAccess(orderCode,email,paymentData){
               }catch(_){}
               clearCanvaReturnFlags();
             };
+
+          saveReceiptSnapshot();
 
         }
 
@@ -2525,7 +2533,7 @@ async function waitForAccess(orderCode,email,paymentData){
       resolve =>
         setTimeout(
           resolve,
-          5000
+          2000
         )
     );
   }
