@@ -1970,47 +1970,219 @@ function getCanvaDisplayTitle(packageName){
 function showDbResult(data,msg){
   const modal=document.getElementById('db-checkout-result');
   const body=document.getElementById('db-result-body');
+
   const orders=Array.isArray(data.orders)?data.orders:[];
   const isGroup=String(data.package_name||'').toLowerCase().includes('grup');
-  const codes=[...new Set(orders.map(o=>o?.order_code).filter(Boolean))];
-  const emailList=Array.isArray(data.customer_emails)?data.customer_emails:[];
-  const groupDisplayCode = data.group_order_code || data.order_code || codes[0] || '';
+  const emailList=Array.isArray(data.customer_emails)
+    ? data.customer_emails
+    : [];
+
+  const uniqueOrders = orders.filter((order,index,self)=>
+    index === self.findIndex(x =>
+      String(x?.order_code||'').trim() === String(order?.order_code||'').trim() &&
+      String(x?.customer_email||'').trim().toLowerCase() === String(order?.customer_email||'').trim().toLowerCase()
+    )
+  );
+
+  const codes=[...new Set(
+    orders.map(o=>o?.order_code).filter(Boolean)
+  )];
+
+  const groupDisplayCode =
+    data.group_order_code ||
+    data.order_code ||
+    codes[0] ||
+    '';
+
   const codeHtml = (isGroup ? groupDisplayCode : codes.length)
-    ? (isGroup
-      ? `<span class="break-all font-bold">${esc(groupDisplayCode)}</span>`
-      : `<div class="space-y-1">${codes.map((c,i)=>`<div><b>${i+1}.</b> <span class="break-all">${esc(c)}</span></div>`).join('')}</div>`)
+    ? (
+        isGroup
+          ? `<span class="break-all font-bold">${esc(groupDisplayCode)}</span>`
+          : `<div class="space-y-1">${codes.map((c,i)=>
+              `<div><b>${i+1}.</b> <span class="break-all">${esc(c)}</span></div>`
+            ).join('')}</div>`
+      )
     : '<span>-</span>';
+
+  const packageLabel =
+    normalizeCanvaPackageLabel(data.package_name);
+
+  const initialStatus =
+    'Akses Canva sedang disiapkan...';
+
+  /*
+   * Untuk paket biasa:
+   * setiap email/order mendapat kartu sendiri:
+   * Email
+   * Tombol Akses Canva
+   * Kode Order
+   *
+   * Untuk Paket Grup:
+   * tombol tetap dibuat per email,
+   * sedangkan satu Kode Order Grup ditampilkan
+   * di bagian bawah seperti desain sebelumnya.
+   */
+  let accessCardsHtml = '';
+
+  if(!isGroup){
+    accessCardsHtml = uniqueOrders.length
+      ? uniqueOrders.map((order,index)=>{
+          const email =
+            String(order?.customer_email||'').trim();
+
+          const safeEmail =
+            email || `Email ${index+1}`;
+
+          const accessKey =
+            safeEmail
+              .replace(/[^a-z0-9]+/gi,'-')
+              .replace(/^-|-$/g,'') ||
+            `email-${index+1}`;
+
+          const orderCode =
+            String(order?.order_code||'').trim() ||
+            '-';
+
+          return `
+            <div
+              id="access-card-${esc(accessKey)}"
+              class="mt-3 bg-white rounded-xl border border-pink-100 p-3"
+            >
+              <div class="text-xs font-semibold text-gray-500 mb-2 break-all">
+                ${esc(safeEmail)}
+              </div>
+
+              <div
+                id="access-slot-${esc(accessKey)}"
+                class="space-y-2"
+              >
+                <div class="payment-access-status">
+                  ${initialStatus}
+                </div>
+              </div>
+
+              <div class="mt-3 text-sm text-gray-700">
+                <b>Kode Order:</b><br>
+                <span class="break-all">${esc(orderCode)}</span>
+              </div>
+            </div>
+          `;
+        }).join('')
+      : '';
+  }
+
   const emailsHtml = isGroup && emailList.length
-    ? `<div class="mt-3 bg-white rounded-xl border border-pink-100 p-3 text-sm"><b>Email dalam Paket Grup (${emailList.length}):</b><div class="mt-2 space-y-1">${emailList.map((e,i)=>`<div>${i+1}. ${esc(e)}</div>`).join('')}</div></div>`
+    ? `
+      <div class="mt-3 bg-white rounded-xl border border-pink-100 p-3 text-sm">
+        <b>Email dalam Paket Grup (${emailList.length}):</b>
+        <div class="mt-2 space-y-1">
+          ${emailList.map((e,i)=>
+            `<div>${i+1}. ${esc(e)}</div>`
+          ).join('')}
+        </div>
+      </div>
+    `
     : '';
-  const packageLabel = normalizeCanvaPackageLabel(data.package_name);
-  const initialStatus = 'Akses Canva sedang disiapkan...';
+
+  const groupAccessSlots = isGroup && emailList.length
+    ? emailList.map((email,index)=>{
+        const safeEmail =
+          String(email||'').trim() ||
+          `Email ${index+1}`;
+
+        const emailKey =
+          safeEmail
+            .replace(/[^a-z0-9]+/gi,'-')
+            .replace(/^-|-$/g,'') ||
+          `email-${index+1}`;
+
+        return `
+          <div
+            id="group-access-card-${esc(emailKey)}"
+            class="mt-3 bg-white rounded-xl border border-pink-100 p-3"
+          >
+            <div class="text-xs font-semibold text-gray-500 mb-2 break-all">
+              ${esc(safeEmail)}
+            </div>
+
+            <div
+              id="group-access-${esc(emailKey)}"
+              class="space-y-2"
+            >
+              <div class="payment-access-status">
+                ${initialStatus}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')
+    : '';
 
   body.innerHTML=`
     <div class="text-center mb-5">
       <span class="text-4xl">✅</span>
-      <h3 class="font-bold text-xl text-gray-700 mt-2">Pembayaran Berhasil</h3>
-      <p class="text-pink-500 font-semibold text-sm mt-1">Canva Premium</p>
-      <p class="text-pink-500 font-semibold text-sm">${esc(packageLabel)}</p>
+      <h3 class="font-bold text-xl text-gray-700 mt-2">
+        Pembayaran Berhasil
+      </h3>
+      <p class="text-pink-500 font-semibold text-sm mt-1">
+        Canva Premium
+      </p>
+      <p class="text-pink-500 font-semibold text-sm">
+        ${esc(packageLabel)}
+      </p>
     </div>
 
     <div class="bg-pink-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
-      <div class="flex justify-between"><span>Harga Paket</span><b>Rp ${fmt(data.amount)}</b></div>
-      <div class="flex justify-between"><span>Biaya QRIS</span><b>Rp ${fmt(data.qris_fee)}</b></div>
-      <div class="flex justify-between border-t border-pink-200 pt-2"><span>Total Pembayaran</span><b>Rp ${fmt(data.customer_payment||data.final_amount)}</b></div>
+      <div class="flex justify-between">
+        <span>Harga Paket</span>
+        <b>Rp ${fmt(data.amount)}</b>
+      </div>
+
+      <div class="flex justify-between">
+        <span>Biaya QRIS</span>
+        <b>Rp ${fmt(data.qris_fee)}</b>
+      </div>
+
+      <div class="flex justify-between border-t border-pink-200 pt-2">
+        <span>Total Pembayaran</span>
+        <b>Rp ${fmt(data.customer_payment||data.final_amount)}</b>
+      </div>
     </div>
 
-    <div class="mt-4 text-sm text-gray-600 leading-6">${esc(msg||'Pembayaran berhasil. Akses sedang diproses.')}</div>
-
-    <div id="db-result-access-status" class="payment-access-status">${initialStatus}</div>
-
-    <div id="db-result-access" class="mt-4 space-y-2"></div>
-
-    <div class="mt-4 bg-white rounded-xl border border-pink-100 p-3 text-sm">
-      <b>${isGroup?'Kode Order Paket Grup:':'Kode Order:'}</b><br>${codeHtml}
+    <div class="mt-4 text-sm text-gray-600 leading-6">
+      ${esc(msg||'Pembayaran berhasil. Akses sedang diproses.')}
     </div>
-    ${emailsHtml}
+
+    <div
+      id="db-result-access-status"
+      class="payment-access-status"
+    >
+      ${initialStatus}
+    </div>
+
+    ${
+      !isGroup
+        ? `<div id="db-result-access" class="space-y-2 mt-2">
+             ${accessCardsHtml}
+           </div>`
+        : `<div id="db-result-access" class="space-y-2 mt-2">
+             ${groupAccessSlots}
+           </div>`
+    }
+
+    ${
+      isGroup
+        ? `
+          <div class="mt-4 bg-white rounded-xl border border-pink-100 p-3 text-sm">
+            <b>Kode Order Paket Grup:</b><br>
+            ${codeHtml}
+          </div>
+          ${emailsHtml}
+        `
+        : ''
+    }
   `;
+
   modal.classList.remove('hidden');
 }
 
@@ -2042,6 +2214,8 @@ async function waitForAccess(orderCode,email,paymentData){
       .trim()
       .toLowerCase();
 
+  if(!safeEmail) return false;
+
   const isGroup =
     String(paymentData?.package_name || '')
       .toLowerCase()
@@ -2054,54 +2228,63 @@ async function waitForAccess(orderCode,email,paymentData){
     'default';
 
   /*
-   * Paket Grup mempunyai satu order code tetapi banyak email.
-   * Karena itu setiap email diberi container sendiri agar
-   * tombol email satu tidak menimpa tombol email lainnya.
+   * Setiap email mempunyai slot sendiri.
+   * Paket biasa: slot sudah dibuat oleh showDbResult().
+   * Paket grup: slot juga dibuat per email.
    */
-  let targetContainer = rootContainer;
+  let targetContainer = null;
 
   if(isGroup){
-
-    const groupWrapId =
+    const groupSlotId =
       'group-access-' + emailKey;
 
-    let groupWrap =
-      document.getElementById(groupWrapId);
+    targetContainer =
+      document.getElementById(groupSlotId);
 
-    if(!groupWrap){
-
-      groupWrap =
-        document.createElement('div');
-
-      groupWrap.id =
-        groupWrapId;
-
-      groupWrap.className =
-        'mb-3';
-
-      groupWrap.innerHTML =
-        `<div class="text-xs font-semibold text-gray-600 mb-1">${esc(safeEmail)}</div>` +
-        `<div class="group-access-inner"></div>`;
-
-      rootContainer.appendChild(
-        groupWrap
-      );
-
-    }
+  }else{
+    const accessSlotId =
+      'access-slot-' + emailKey;
 
     targetContainer =
-      groupWrap.querySelector(
-        '.group-access-inner'
-      );
+      document.getElementById(accessSlotId);
+  }
 
-    if(!targetContainer){
-      targetContainer = rootContainer;
-    }
+  /*
+   * Fallback untuk kompatibilitas jika slot belum ada.
+   */
+  if(!targetContainer){
+    targetContainer =
+      document.createElement('div');
 
+    targetContainer.className =
+      'space-y-2 mt-3';
+
+    const card =
+      document.createElement('div');
+
+    card.className =
+      'bg-white rounded-xl border border-pink-100 p-3';
+
+    const emailLabel =
+      document.createElement('div');
+
+    emailLabel.className =
+      'text-xs font-semibold text-gray-500 mb-2 break-all';
+
+    emailLabel.textContent =
+      safeEmail;
+
+    card.appendChild(emailLabel);
+    card.appendChild(targetContainer);
+    rootContainer.appendChild(card);
   }
 
   const buttonId =
     'access-button-' +
+    emailKey;
+
+  const codeId =
+    'access-order-' +
     emailKey;
 
   for(
@@ -2112,10 +2295,6 @@ async function waitForAccess(orderCode,email,paymentData){
 
     try{
 
-      /*
-       * Purchase history menjadi sumber access_url yang dipakai
-       * tombol Gabung Canva di halaman History.
-       */
       const response =
         await fetch(
           PURCHASE_HISTORY_URL,
@@ -2185,22 +2364,18 @@ async function waitForAccess(orderCode,email,paymentData){
           button.href =
             order.access_url;
 
-          /*
-           * Tidak ada target="_blank".
-           * Jadi Canva dibuka di tab yang sama.
-           */
           button.target =
             '_self';
 
           button.rel =
             'noopener';
 
-          // Tombol dari struk adalah jalan MASUK ke halaman akses.
-          // Jangan biarkan flag lama dari kunjungan Canva sebelumnya
-          // menyebabkan halaman akses langsung ter-reset ke Products.
-          button.addEventListener('click',()=>{
-            clearCanvaReturnFlags();
-          });
+          button.addEventListener(
+            'click',
+            ()=>{
+              clearCanvaReturnFlags();
+            }
+          );
 
           button.className =
             'block w-full text-center ' +
@@ -2210,12 +2385,28 @@ async function waitForAccess(orderCode,email,paymentData){
             'transition-all shadow-md';
 
           button.textContent =
-            isGroup
-              ? '🔗 Akses Canva'
-              : '🔗 Akses Canva';
+            '🔗 Akses Canva';
 
+          targetContainer.innerHTML = '';
           targetContainer.appendChild(
             button
+          );
+
+          const code =
+            document.createElement('div');
+
+          code.id =
+            codeId;
+
+          code.className =
+            'mt-2 text-sm text-gray-700';
+
+          code.innerHTML =
+            '<b>Kode Order:</b><br>' +
+            `<span class="break-all">${esc(order.order_code || orderCode || '-')}</span>`;
+
+          targetContainer.appendChild(
+            code
           );
 
         }else{
@@ -2223,10 +2414,34 @@ async function waitForAccess(orderCode,email,paymentData){
           button.href =
             order.access_url;
 
-          button.onclick = ()=>{
-            clearCanvaReturnFlags();
-          };
+          button.onclick =
+            ()=>{
+              clearCanvaReturnFlags();
+            };
 
+          let code =
+            document.getElementById(
+              codeId
+            );
+
+          if(!code){
+            code =
+              document.createElement('div');
+
+            code.id =
+              codeId;
+
+            code.className =
+              'mt-2 text-sm text-gray-700';
+
+            targetContainer.appendChild(
+              code
+            );
+          }
+
+          code.innerHTML =
+            '<b>Kode Order:</b><br>' +
+            `<span class="break-all">${esc(order.order_code || orderCode || '-')}</span>`;
         }
 
         return true;
@@ -2248,9 +2463,12 @@ async function waitForAccess(orderCode,email,paymentData){
           5000
         )
     );
-
   }
 
+  /*
+   * Kalau akses belum siap, biarkan pesan
+   * tetap berada di kartu email masing-masing.
+   */
   return false;
 }
 
