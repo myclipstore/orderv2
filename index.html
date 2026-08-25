@@ -2184,9 +2184,45 @@ function showDbResult(data,msg){
   `;
 
   modal.classList.remove('hidden');
+  saveReceiptSnapshot();
 }
 
-function closeDbResult(){document.getElementById('db-checkout-result').classList.add('hidden')}
+function saveReceiptSnapshot(){
+  try{
+    const body=document.getElementById('db-result-body');
+    const modal=document.getElementById('db-checkout-result');
+    if(!body || !modal || modal.classList.contains('hidden')) return;
+    sessionStorage.setItem('myclips_receipt_snapshot', body.innerHTML);
+    sessionStorage.setItem('myclips_receipt_available','1');
+  }catch(_){ }
+}
+
+function clearReceiptSnapshot(){
+  try{
+    sessionStorage.removeItem('myclips_receipt_snapshot');
+    sessionStorage.removeItem('myclips_receipt_available');
+  }catch(_){ }
+}
+
+function restoreReceiptSnapshot(){
+  try{
+    const html=sessionStorage.getItem('myclips_receipt_snapshot');
+    if(!html) return false;
+    const modal=document.getElementById('db-checkout-result');
+    const body=document.getElementById('db-result-body');
+    if(!modal || !body) return false;
+    body.innerHTML=html;
+    modal.classList.remove('hidden');
+    return true;
+  }catch(_){
+    return false;
+  }
+}
+
+function closeDbResult(){
+  document.getElementById('db-checkout-result').classList.add('hidden');
+  clearReceiptSnapshot();
+}
 function clearCanvaReturnFlags(){
   try{
     sessionStorage.removeItem('myclips_refresh_after_canva');
@@ -2794,6 +2830,41 @@ async function loadAccessPage(){
 
 loadAccessPage();
 
+// ============================================================
+// NAVIGASI: dari halaman akses kembali ke struk pembayaran
+// ============================================================
+if(accessToken){
+  try{
+    history.pushState(
+      {myclipsAccessGuard:true},
+      '',
+      window.location.href
+    );
+  }catch(_){ }
+}
+
+window.addEventListener('popstate',()=>{
+  if(!accessToken) return;
+
+  try{
+    sessionStorage.removeItem('myclips_refresh_after_canva');
+    sessionStorage.removeItem('myclips_left_access_page');
+
+    const restored=restoreReceiptSnapshot();
+    const baseUrl=window.location.origin + window.location.pathname;
+
+    history.replaceState(
+      {myclipsReceiptRestored:true},
+      '',
+      baseUrl
+    );
+
+    if(!restored){
+      document.getElementById('db-access-page')?.classList.add('hidden');
+    }
+  }catch(_){ }
+});
+
 // ===== CONSUME ACCESS / LANJUT KE CANVA =====
 // Handler ini sengaja dipasang setelah loadAccessPage() supaya
 // tombol tetap bekerja baik untuk paket biasa maupun Paket Grup.
@@ -2884,6 +2955,10 @@ Promise.all([
   loadProductPrices(),
   loadProductStock()
 ]);
+
+if(!accessToken){
+  clearReceiptSnapshot();
+}
 
 function resetStoreAfterCanvaReturn(){
   if(!accessToken) return false;
