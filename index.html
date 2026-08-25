@@ -1122,6 +1122,15 @@ let selectedProduct=null,selectedPackage=null,selectedPrice=null,selectedCode=nu
 let historySortOrder='newest';
 let lastCanvaEmail='';
 let accessToken=new URLSearchParams(window.location.search).get('access');
+
+function buildCurrentAccessUrl(token){
+  const url = new URL(window.location.href);
+  url.search = '';
+  url.hash = '';
+  url.searchParams.set('access', String(token || ''));
+  return url.href;
+}
+
 let waitingReturnFromCanva=false;
 let accessRefreshInProgress=false;
 
@@ -2426,7 +2435,7 @@ async function waitForAccess(orderCode,email,paymentData){
             buttonId;
 
           button.href =
-            order.access_url;
+            buildCurrentAccessUrl(order.access_token || accessToken);
 
           button.target =
             '_self';
@@ -2459,7 +2468,7 @@ async function waitForAccess(orderCode,email,paymentData){
         }else{
 
           button.href =
-            order.access_url;
+            buildCurrentAccessUrl(order.access_token || accessToken);
 
           button.onclick =
             ()=>{
@@ -2854,6 +2863,16 @@ async function loadAccessPage(){
   document.getElementById('db-access-warning').textContent=error?.message||'Gagal memuat akses.';
   document.getElementById('db-continue-canva').style.display='none';
  }
+}
+
+if(accessToken){
+  // Saat URL membawa token akses, halaman produk disembunyikan supaya
+  // klik tombol Akses Canva selalu membuka halaman akses, bukan produk.
+  try{
+    document.querySelector('header')?.classList.add('hidden');
+    document.querySelector('main')?.classList.add('hidden');
+    document.querySelector('footer')?.classList.add('hidden');
+  }catch(_){ }
 }
 
 loadAccessPage();
