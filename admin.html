@@ -332,127 +332,75 @@ button.small{
 }
 
 
-.stock-grid{
+
+/* =====================================================
+   COMPACT PRODUCT ACCORDIONS
+   ===================================================== */
+.product-accordion{
+  margin-top:12px;
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:12px;
-  margin-top:15px;
+  gap:10px;
 }
-.stock-item{
-  border:1px solid #e7e9ef;
-  border-radius:14px;
-  padding:15px;
-  background:#fafbff;
+.product-panel{
+  border:1px solid var(--pink-border);
+  border-radius:16px;
+  background:rgba(255,255,255,.82);
+  overflow:hidden;
+  box-shadow:0 5px 18px rgba(255,107,157,.07);
 }
-.stock-item-title{
-  font-weight:800;
-  font-size:14px;
-  margin-bottom:10px;
-}
-.stock-row{
+.product-panel summary{
+  list-style:none;
+  cursor:pointer;
+  padding:15px 16px;
   display:flex;
-  gap:8px;
   align-items:center;
-}
-.stock-row input{
-  flex:1;
-  min-width:0;
-}
-.stock-badge{
-  display:inline-block;
-  margin-top:9px;
-  padding:5px 9px;
-  border-radius:999px;
-  font-size:11px;
+  justify-content:space-between;
+  gap:12px;
   font-weight:800;
+  color:#3d4250;
+  background:linear-gradient(180deg,#fff,#fff7fa);
+  user-select:none;
 }
-.stock-badge.ready{
-  background:#dcfce7;
-  color:#166534;
+.product-panel summary::-webkit-details-marker{display:none}
+.product-panel summary:after{
+  content:"＋";
+  font-size:22px;
+  color:var(--pink);
+  line-height:1;
 }
-.stock-badge.empty{
-  background:#fee2e2;
-  color:#b91c1c;
+.product-panel[open] summary:after{content:"−"}
+.product-panel-body{
+  padding:14px;
+  border-top:1px solid #f6dbe5;
 }
-.stock-save-all{
-  margin-top:15px;
-}
-@media(max-width:1100px){
-  .stock-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-}
-@media(max-width:650px){
-  .stock-grid{
-    grid-template-columns:1fr;
-  }
-}
-
-.stock-product-group{
-  margin-top:18px;
-}
-.stock-product-title{
-  font-weight:900;
-  font-size:15px;
-  color:#344054;
-  margin-bottom:9px;
-}
-.stock-product-grid{
+.product-panel-grid{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:12px;
+  gap:10px;
 }
-@media(max-width:1100px){
-  .stock-product-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-}
-@media(max-width:650px){
-  .stock-product-grid{
-    grid-template-columns:1fr;
-  }
-}
-
-.price-product-group{
-  margin-top:18px;
-}
-.price-product-title{
-  font-weight:900;
-  font-size:15px;
-  color:#344054;
-  margin-bottom:9px;
-}
-.price-grid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:12px;
-}
+.stock-item,
 .price-item{
-  border:1px solid #e7e9ef;
-  border-radius:14px;
-  padding:15px;
-  background:#fafbff;
+  border:1px solid #f1d7e0;
+  border-radius:13px;
+  padding:12px;
+  background:#fffafd;
 }
+.stock-item-title,
 .price-item-title{
   font-weight:800;
-  font-size:14px;
-  margin-bottom:9px;
-}
-.price-row{
-  display:flex;
-  gap:8px;
-  align-items:center;
-}
-.price-row input{
-  flex:1;
-  min-width:0;
+  font-size:13px;
+  margin-bottom:8px;
+  line-height:1.35;
 }
 @media(max-width:1100px){
-  .price-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .product-panel-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:650px){
-  .price-grid{grid-template-columns:1fr}
+  .product-panel summary{padding:13px 14px}
+  .product-panel-body{padding:11px}
+  .product-panel-grid{grid-template-columns:1fr}
 }
+
 
 /* =====================================================
    MYCLIPS ADMIN REDESIGN
@@ -754,14 +702,7 @@ button.red:hover{background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%);}
   <div class="actions stock-save-all">
 
     <button
-      id="refreshStockBtn"
-      class="dark"
-    >
-      Refresh Stok
-    </button>
-
-    <button
-      id="saveStockBtn"
+      id="saveStockBtn" type="button"
       class="green"
     >
       Simpan Semua Stok
@@ -800,14 +741,7 @@ button.red:hover{background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%);}
   <div class="actions stock-save-all">
 
     <button
-      id="refreshPriceBtn"
-      class="dark"
-    >
-      Refresh Harga
-    </button>
-
-    <button
-      id="savePriceBtn"
+      id="savePriceBtn" type="button"
       class="green"
     >
       Simpan Semua Harga
@@ -1437,21 +1371,73 @@ function updateLastUpdated(){
   $('lastUpdatedText').textContent = 'Terakhir diperbarui: ' + new Date().toLocaleTimeString('id-ID');
 }
 
+function hasOpenProductEditor(){
+  return Boolean(
+    document.querySelector(
+      '#stockGrid .product-panel[open], #priceGrid .product-panel[open]'
+    )
+  );
+}
+
+function hasFocusedProductInput(){
+  const active = document.activeElement;
+  return Boolean(
+    active &&
+    (
+      active.matches('[data-stock-product][data-stock-package]') ||
+      active.matches('[data-price-product][data-price-package]')
+    )
+  );
+}
+
 async function refreshAll(silent=false){
-  if(!adminKey || refreshInProgress) return;
+
+  if(refreshInProgress){
+    return;
+  }
+
   refreshInProgress = true;
+
   try{
-    await Promise.all([
+
+    const editorOpen =
+      hasOpenProductEditor() ||
+      hasFocusedProductInput();
+
+    /*
+     * Order/voucher/team tetap auto-refresh.
+     * Stok & harga DIJEDA ketika admin sedang membuka
+     * kategori atau mengedit input, supaya data yang belum
+     * disimpan tidak tertimpa dan accordion tidak menutup.
+     */
+    const tasks = [
       loadTeam(),
-      loadStock(),
-      loadPrices(),
       loadVouchers(),
       loadOrders()
-    ]);
+    ];
+
+    if(!editorOpen){
+      tasks.push(
+        loadStock(),
+        loadPrices()
+      );
+    }
+
+    await Promise.all(tasks);
+
     updateDashboard();
     updateLastUpdated();
+
   }catch(error){
-    if(!silent) message($('appMessage'), error.message, false);
+
+    if(!silent){
+      message(
+        $('appMessage'),
+        error.message,
+        false
+      );
+    }
+
   }finally{
     refreshInProgress = false;
   }
@@ -1638,77 +1624,91 @@ async function loadPrices(){
 
   renderPrices();
 
+  // Auto-refresh hanya membaca data, tidak menyimpan.
+  // Jangan tampilkan pesan "berhasil disimpan" sebagai akibat refresh.
+  if($("priceMessage") && $("priceMessage").dataset.manual !== "1"){
+    $("priceMessage").style.display = "none";
+  }
+
 }
 
 function renderPrices(){
 
-  const container =
-    $("priceGrid");
+  const container = $("priceGrid");
 
-  const map =
-    new Map(
-      productPrices.map(
-        item => [
-          `${item.product_name}||${item.package_name}`,
-          item
-        ]
-      )
-    );
+  const map = new Map(
+    productPrices.map(
+      item => [
+        `${item.product_name}||${item.package_name}`,
+        item
+      ]
+    )
+  );
+
+  container.className = "product-accordion";
 
   container.innerHTML =
-    Object.entries(
-      pricePackages
-    ).map(
-      ([productName, packages]) => {
+    Object.entries(pricePackages)
+      .map(
+        ([productName, packages], index) => {
 
-        const cards =
-          packages.map(
-            packageName => {
+          const cards =
+            packages.map(
+              packageName => {
 
-              const item =
-                map.get(
-                  `${productName}||${packageName}`
-                );
+                const item =
+                  map.get(
+                    `${productName}||${packageName}`
+                  );
 
-              const price =
-                Number(
-                  item?.price ??
-                  0
-                );
+                const price =
+                  Number(
+                    item?.price ?? 0
+                  );
 
-              return `
-                <div class="price-item">
-                  <div class="price-item-title">
-                    ${esc(packageName)}
+                return `
+                  <div class="price-item">
+                    <div class="price-item-title">
+                      ${esc(packageName)}
+                    </div>
+
+                    <div class="price-row">
+                      <input
+                        type="number"
+                        min="0"
+                        step="500"
+                        data-price-product="${esc(productName)}"
+                        data-price-package="${esc(packageName)}"
+                        value="${price}"
+                      >
+                    </div>
                   </div>
-                  <div class="price-row">
-                    <input
-                      type="number"
-                      min="0"
-                      step="500"
-                      data-price-product="${esc(productName)}"
-                      data-price-package="${esc(packageName)}"
-                      value="${price}"
-                    >
-                  </div>
+                `;
+              }
+            ).join("");
+
+          return `
+            <details
+              class="product-panel"
+              
+            >
+              <summary>
+                <span>${esc(productName)}</span>
+                <span style="font-size:12px;color:#a17a89">
+                  ${packages.length} paket
+                </span>
+              </summary>
+
+              <div class="product-panel-body">
+                <div class="product-panel-grid">
+                  ${cards}
                 </div>
-              `;
-            }
-          ).join("");
-
-        return `
-          <div class="price-product-group">
-            <div class="price-product-title">
-              ${esc(productName)}
-            </div>
-            <div class="price-grid">
-              ${cards}
-            </div>
-          </div>
-        `;
-      }
-    ).join("");
-
+              </div>
+            </details>
+          `;
+        }
+      )
+      .join("");
 }
 
 async function savePrices(){
@@ -1757,13 +1757,30 @@ async function savePrices(){
       );
     }
 
+    $("priceMessage").dataset.manual = "1";
+
     message(
       $("priceMessage"),
       "Semua harga berhasil disimpan.",
       true
     );
 
+    document
+      .querySelectorAll(
+        '[data-price-product][data-price-package]'
+      )
+      .forEach(
+        input => delete input.dataset.dirty
+      );
+
     await loadPrices();
+
+    setTimeout(() => {
+      if($("priceMessage")){
+        $("priceMessage").dataset.manual = "0";
+        $("priceMessage").style.display = "none";
+      }
+    }, 3500);
 
   }catch(error){
 
@@ -1794,136 +1811,149 @@ async function loadStock(){
 
   renderStock();
 
+  // Auto-refresh hanya membaca data, tidak menyimpan.
+  if($("stockMessage") && $("stockMessage").dataset.manual !== "1"){
+    $("stockMessage").style.display = "none";
+  }
+
 }
 
 
 function renderStock(){
 
-  const container =
-    $("stockGrid");
+  const container = $("stockGrid");
 
-  const map =
-    new Map(
-      productStock.map(
-        item => [
-          `${item.product_name}||${item.package_name}`,
-          item
-        ]
-      )
-    );
+  const map = new Map(
+    productStock.map(
+      item => [
+        `${item.product_name}||${item.package_name}`,
+        item
+      ]
+    )
+  );
+
+  container.className = "product-accordion";
 
   container.innerHTML =
     Object.entries(stockPackages)
       .map(
-        ([productName, packages]) => {
+        ([productName, packages], index) => {
 
           const cards =
-            packages
-              .map(
-                packageName => {
+            packages.map(
+              packageName => {
 
-                  const item =
-                    map.get(
-                      `${productName}||${packageName}`
-                    );
+                const item =
+                  map.get(
+                    `${productName}||${packageName}`
+                  );
 
-                  const stock =
-                    Number(
-                      item?.stock ??
-                      0
-                    );
+                const stock =
+                  Number(
+                    item?.stock ?? 0
+                  );
 
-                  const active =
-                    item?.active !==
-                    false;
+                const active =
+                  item?.active !== false;
 
-                  const empty =
-                    !active ||
-                    stock <=
-                    0;
+                const empty =
+                  !active || stock <= 0;
 
-                  return `
+                return `
+                  <div class="stock-item">
 
-                    <div
-                      class="stock-item"
-                    >
-
-                      <div
-                        class="stock-item-title"
-                      >
-                        ${esc(
-                          packageName
-                        )}
-                      </div>
-
-                      <div
-                        class="stock-row"
-                      >
-
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          data-stock-product="${esc(
-                            productName
-                          )}"
-                          data-stock-package="${esc(
-                            packageName
-                          )}"
-                          value="${stock}"
-                        >
-
-                      </div>
-
-                      <span
-                        class="stock-badge ${
-                          empty
-                            ? "empty"
-                            : "ready"
-                        }"
-                      >
-                        ${
-                          empty
-                            ? "STOK HABIS"
-                            : "TERSEDIA"
-                        }
-                      </span>
-
+                    <div class="stock-item-title">
+                      ${esc(packageName)}
                     </div>
 
-                  `;
+                    <div class="stock-row">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        data-stock-product="${esc(productName)}"
+                        data-stock-package="${esc(packageName)}"
+                        value="${stock}"
+                      >
+                    </div>
 
-                }
-              )
-              .join("");
+                    <span class="stock-badge ${
+                      empty ? "empty" : "ready"
+                    }">
+                      ${
+                        empty
+                          ? "STOK HABIS"
+                          : "TERSEDIA"
+                      }
+                    </span>
+
+                  </div>
+                `;
+              }
+            ).join("");
 
           return `
-
-            <div
-              class="stock-product-group"
+            <details
+              class="product-panel"
+              
             >
+              <summary>
+                <span>${esc(productName)}</span>
+                <span style="font-size:12px;color:#a17a89">
+                  ${packages.length} paket
+                </span>
+              </summary>
 
-              <div
-                class="stock-product-title"
-              >
-                ${esc(
-                  productName
-                )}
+              <div class="product-panel-body">
+                <div class="product-panel-grid">
+                  ${cards}
+                </div>
               </div>
-
-              <div
-                class="stock-product-grid"
-              >
-                ${cards}
-              </div>
-
-            </div>
-
+            </details>
           `;
-
         }
       )
       .join("");
+}
+
+function bindProductEditorGuards(){
+
+  const containers = [
+    $('stockGrid'),
+    $('priceGrid')
+  ].filter(Boolean);
+
+  containers.forEach(container => {
+
+    container.addEventListener(
+      'toggle',
+      () => {
+        /*
+         * Tidak melakukan refresh di sini.
+         * Saat panel dibuka, refreshAll berikutnya otomatis
+         * melewati stok/harga sampai panel ditutup.
+         */
+      },
+      true
+    );
+
+    container.addEventListener(
+      'input',
+      event => {
+        const target = event.target;
+
+        if(
+          target.matches(
+            '[data-stock-product][data-stock-package],' +
+            '[data-price-product][data-price-package]'
+          )
+        ){
+          target.dataset.dirty = '1';
+        }
+      }
+    );
+
+  });
 
 }
 
@@ -1994,13 +2024,30 @@ async function saveStock(){
 
     }
 
+    $("stockMessage").dataset.manual = "1";
+
     message(
       $("stockMessage"),
       "Semua stok berhasil disimpan.",
       true
     );
 
+    document
+      .querySelectorAll(
+        '[data-stock-product][data-stock-package]'
+      )
+      .forEach(
+        input => delete input.dataset.dirty
+      );
+
     await loadStock();
+
+    setTimeout(() => {
+      if($("stockMessage")){
+        $("stockMessage").dataset.manual = "0";
+        $("stockMessage").style.display = "none";
+      }
+    }, 3500);
     updateDashboard();
     updateLastUpdated();
 
@@ -3521,6 +3568,12 @@ $("selectAll")
 
 
 /* =====================================================
+   PRODUCT EDITOR GUARD
+   ===================================================== */
+
+bindProductEditorGuards();
+
+/* =====================================================
    LOGIN
    ===================================================== */
 
@@ -3711,21 +3764,6 @@ $("addVoucherBtn")
   );
 
 
-$("refreshStockBtn")
-  .addEventListener(
-    "click",
-    async () => {
-      try{
-        await loadStock();
-        updateDashboard();
-        updateLastUpdated();
-      }catch(error){
-        message($("stockMessage"), error.message, false);
-      }
-    }
-  );
-
-
 $("saveStockBtn")
   .addEventListener(
     "click",
@@ -3737,41 +3775,7 @@ $("saveStockBtn")
    PRICE EVENTS
    ===================================================== */
 
-$("refreshPriceBtn")
-  .addEventListener(
-    "click",
-    async () => {
-
-      try{
-
-        await loadPrices();
-        updateDashboard();
-        updateLastUpdated();
-
-        message(
-          $("priceMessage"),
-          "Harga berhasil diperbarui dari database.",
-          true
-        );
-
-      }
-
-      catch(error){
-
-        message(
-          $("priceMessage"),
-          error.message,
-          false
-        );
-
-      }
-
-    }
-  );
-
-
-$("savePriceBtn")
-  .addEventListener(
+$("savePriceBtn").addEventListener(
     "click",
     savePrices
   );
