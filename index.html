@@ -1241,6 +1241,82 @@ document.querySelectorAll('.info-tooltip button').forEach(button=>button.addEven
 }));
 function closeInfoModal(){document.getElementById('info-modal').classList.add('hidden')}
 
+let capcutQuantity = 1;
+
+function getCapCutStock(){
+  return Math.max(
+    0,
+    Number(
+      productStock?.['CapCut Premium']?.[selectedPackage] ?? 0
+    )
+  );
+}
+
+function updateCapCutTotal(){
+  const qtyInput = document.getElementById('capcut-qty');
+  const totalEl = document.getElementById('capcut-total-price');
+  const checkoutBtn = document.getElementById('checkout-btn');
+
+  const maxStock = getCapCutStock();
+  let qty = Number(qtyInput?.value || 1);
+
+  if(!Number.isFinite(qty) || qty < 1){
+    qty = 1;
+  }
+
+  if(maxStock > 0){
+    qty = Math.min(qty, maxStock);
+  }
+
+  capcutQuantity = qty;
+
+  if(qtyInput){
+    qtyInput.value = String(qty);
+    qtyInput.max = String(Math.max(1, maxStock));
+  }
+
+  if(totalEl){
+    totalEl.textContent = formatPriceShort(Number(selectedPrice || 0) * qty);
+  }
+
+  if(checkoutBtn){
+    checkoutBtn.disabled = !(maxStock > 0 && selectedPrice && qty >= 1 && qty <= maxStock);
+  }
+}
+
+function initializeCapCutQuantity(){
+  const container = document.getElementById('capcut-qty-container');
+  const checkoutBtn = document.getElementById('checkout-btn');
+  if(!container || !checkoutBtn) return;
+
+  const maxStock = getCapCutStock();
+  capcutQuantity = 1;
+
+  container.innerHTML = `
+    <label class="block text-gray-600 text-sm font-medium mb-2">Jumlah</label>
+    <div class="flex items-center gap-2">
+      <input
+        id="capcut-qty"
+        type="number"
+        min="1"
+        max="${Math.max(1, maxStock)}"
+        value="1"
+        inputmode="numeric"
+        class="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors"
+      >
+    </div>
+    <p class="text-xs text-gray-500 mt-2">
+      Stok tersedia: <strong>${maxStock}</strong>
+    </p>
+  `;
+
+  const qtyInput = document.getElementById('capcut-qty');
+  qtyInput?.addEventListener('input', updateCapCutTotal);
+  qtyInput?.addEventListener('change', updateCapCutTotal);
+
+  updateCapCutTotal();
+}
+
 function openModal(){
  const modal=document.getElementById('email-modal');
  const icon=document.getElementById('modal-icon');
@@ -1306,6 +1382,7 @@ function closeModal(){
  selectedProduct=null;
  selectedPackage=null;
  selectedPrice=null;
+ capcutQuantity=1;
  needsEmail=false;
  isCapCut=false;
 }
@@ -1994,12 +2071,39 @@ async function checkoutCanva(){
 // Hook checkout button while preserving design for other products.
 document.getElementById('checkout-btn').onclick=async()=>{
  if(selectedProduct==='Canva Premium')return checkoutCanva();
- // Original WhatsApp-style behavior for CapCut / ChatGPT remains.
+
  const config=window.elementSdk?.config||{whatsapp_number:'85707486749'};
- const waNumber=config.whatsapp_number||'85707486749';
+ const waRaw=String(config.whatsapp_number||'85707486749').replace(/\D/g,'');
+ const waNumber=waRaw.startsWith('62') ? waRaw : `62${waRaw.replace(/^0/,'')}`;
+
+ if(selectedProduct==='CapCut Premium'){
+   const stock=getCapCutStock();
+   const qty=Math.max(1,Number(capcutQuantity||1));
+
+   if(stock<=0){
+     showToast('Stok paket CapCut ini sedang habis.','error');
+     return;
+   }
+
+   if(qty>stock){
+     showToast(`Jumlah melebihi stok. Maksimal ${stock}.`,'error');
+     return;
+   }
+
+   const unitPrice=Number(selectedPrice||0);
+   const totalPrice=unitPrice*qty;
+   const message=`*Halo MYCLIPS!*\nSaya ingin memesan:\n━━━━━━━━━━━━━━━━━━\n*Produk:* ${selectedProduct}\n*Paket:* ${selectedPackage}\n*Jumlah:* ${qty}\n*Harga Satuan:* Rp ${unitPrice.toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\n*Total Harga:* Rp ${totalPrice.toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\nMohon diproses ya, terima kasih!`;
+
+   window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`,'_blank');
+   closeModal();
+   showToast('Mengarahkan ke WhatsApp... 📱','success');
+   return;
+ }
+
+ // ChatGPT tetap menggunakan alur WhatsApp yang sudah ada.
  const email=Array.from(document.querySelectorAll('.single-email-input')).map(i=>i.value.trim()).filter(Boolean).join(', ');
- const message=`*Halo MYCLIPS!*\nSaya ingin memesan:\n━━━━━━━━━━━━━━━━━━\n*Produk:* ${selectedProduct}\n*Paket:* ${selectedPackage}\n*Email:* ${email}\n━━━━━━━━━━━━━━━━━━\n*Harga:* Rp ${parseInt(selectedPrice||0).toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\nMohon diproses ya, terima kasih!`;
- window.open(`https://wa.me/62${waNumber}?text=${encodeURIComponent(message)}`,'_blank');
+ const message=`*Halo MYCLIPS!*\nSaya ingin memesan:\n━━━━━━━━━━━━━━━━━━\n*Produk:* ${selectedProduct}\n*Paket:* ${selectedPackage}\n*Jumlah:* 1\n*Harga Satuan:* Rp ${parseInt(selectedPrice||0).toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\n*Total Harga:* Rp ${parseInt(selectedPrice||0).toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\nMohon diproses ya, terima kasih!`;
+ window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`,'_blank');
  closeModal();showToast('Mengarahkan ke WhatsApp... 📱','success');
 };
 
