@@ -1428,8 +1428,8 @@ async function refreshAll(silent=false){
      */
     const tasks = [
       loadTeam(),
-      loadVouchers(),
-      loadOrders()
+      loadVouchers(true),
+      loadOrders(true)
     ];
 
     if(!editorOpen){
@@ -2088,7 +2088,7 @@ async function saveStock(){
    VOUCHER
    ===================================================== */
 
-async function loadVouchers(){
+async function loadVouchers(silent=false){
 
   const data =
     await api(
@@ -2099,6 +2099,15 @@ async function loadVouchers(){
   vouchers =
     data.vouchers ||
     [];
+
+
+  if(
+    silent &&
+    $("voucherMessage")
+  ){
+    $("voucherMessage").style.display = "none";
+    $("voucherMessage").textContent = "";
+  }
 
 
   renderVouchers();
@@ -2623,7 +2632,7 @@ async function deleteVoucher(
    ORDERS
    ===================================================== */
 
-async function loadOrders(){
+async function loadOrders(silent=false){
 
   const data =
     await api(
@@ -2634,6 +2643,15 @@ async function loadOrders(){
   orders =
     data.orders ||
     [];
+
+
+  if(
+    silent &&
+    $("appMessage")
+  ){
+    $("appMessage").style.display = "none";
+    $("appMessage").textContent = "";
+  }
 
 
   renderOrders();
