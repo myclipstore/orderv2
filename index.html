@@ -1302,6 +1302,8 @@ function initializeCapCutQuantity(){
         max="${Math.max(1, maxStock)}"
         value="1"
         inputmode="numeric"
+        step="1"
+        autocomplete="off"
         class="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors"
       >
     </div>
@@ -1313,6 +1315,7 @@ function initializeCapCutQuantity(){
   const qtyInput = document.getElementById('capcut-qty');
   qtyInput?.addEventListener('input', updateCapCutTotal);
   qtyInput?.addEventListener('change', updateCapCutTotal);
+  qtyInput?.addEventListener('keyup', updateCapCutTotal);
 
   updateCapCutTotal();
 }
@@ -1341,8 +1344,16 @@ function openModal(){
   icon.textContent='🤖';title.textContent=selectedProduct;packageInfo.textContent=`${selectedPackage} - ${formatPriceShort(selectedPrice)}`;
   cap.classList.add('hidden');group.classList.add('hidden');single.classList.remove('hidden');document.getElementById('canva-voucher-wrap').classList.add('hidden');initializeSingleEmails();
  }
- document.getElementById('checkout-btn').disabled=true;
- document.getElementById('checkout-btn').textContent=selectedProduct==='Canva Premium'?'Bayar Sekarang':'Checkout via WhatsApp';
+ const checkoutBtn = document.getElementById('checkout-btn');
+ if(selectedProduct==='Canva Premium'){
+   checkoutBtn.disabled = true;
+ } else if(selectedProduct==='CapCut Premium'){
+   // initializeCapCutQuantity() sudah menghitung validitas stok/jumlah.
+   updateCapCutTotal();
+ } else {
+   checkoutBtn.disabled = true;
+ }
+ checkoutBtn.textContent=selectedProduct==='Canva Premium'?'Bayar Sekarang':'Checkout via WhatsApp';
  modal.classList.remove('hidden');
 }
 function closeModal(){
