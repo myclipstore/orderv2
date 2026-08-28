@@ -1252,28 +1252,65 @@ function getCapCutStock(){
   );
 }
 
-function updateCapCutTotal(){
+function updateCapCutTotal(normalize=false){
   const qtyInput = document.getElementById('capcut-qty');
   const totalEl = document.getElementById('capcut-total-price');
   const checkoutBtn = document.getElementById('checkout-btn');
 
   const maxStock = getCapCutStock();
-  let qty = Number(qtyInput?.value || 1);
 
-  if(!Number.isFinite(qty) || qty < 1){
-    qty = 1;
+  if(!qtyInput){
+    return;
   }
 
-  if(maxStock > 0){
-    qty = Math.min(qty, maxStock);
+  qtyInput.max = String(Math.max(1, maxStock));
+
+  // Saat user masih mengetik, JANGAN langsung mengganti isi input.
+  // Ini mencegah angka yang baru diketik tertimpa oleh nilai stok.
+  let raw = String(qtyInput.value ?? '').trim();
+
+  if(raw === ''){
+    capcutQuantity = 0;
+    if(totalEl){
+      totalEl.textContent = 'Total: ' + formatPriceShort(0);
+    }
+    if(checkoutBtn){
+      checkoutBtn.disabled = true;
+    }
+    return;
+  }
+
+  let qty = Number(raw);
+
+  if(!Number.isInteger(qty) || qty < 1){
+    capcutQuantity = 0;
+    if(totalEl){
+      totalEl.textContent = 'Total: ' + formatPriceShort(0);
+    }
+    if(checkoutBtn){
+      checkoutBtn.disabled = true;
+    }
+    return;
+  }
+
+  if(qty > maxStock){
+    if(normalize){
+      qty = maxStock;
+      qtyInput.value = String(maxStock);
+    }else{
+      // Jangan mengubah input saat event input sedang berlangsung.
+      capcutQuantity = qty;
+      if(totalEl){
+        totalEl.textContent = formatPriceShort(Number(selectedPrice || 0) * qty);
+      }
+      if(checkoutBtn){
+        checkoutBtn.disabled = true;
+      }
+      return;
+    }
   }
 
   capcutQuantity = qty;
-
-  if(qtyInput){
-    qtyInput.value = String(qty);
-    qtyInput.max = String(Math.max(1, maxStock));
-  }
 
   if(totalEl){
     totalEl.textContent = formatPriceShort(Number(selectedPrice || 0) * qty);
@@ -1313,11 +1350,17 @@ function initializeCapCutQuantity(){
   `;
 
   const qtyInput = document.getElementById('capcut-qty');
-  qtyInput?.addEventListener('input', updateCapCutTotal);
-  qtyInput?.addEventListener('change', updateCapCutTotal);
-  qtyInput?.addEventListener('keyup', updateCapCutTotal);
+  qtyInput?.addEventListener('input', () => updateCapCutTotal(false));
+  qtyInput?.addEventListener('change', () => updateCapCutTotal(true));
+  qtyInput?.addEventListener('blur', () => updateCapCutTotal(true));
+  qtyInput?.addEventListener('keydown', event => {
+    if(event.key === 'Enter'){
+      event.preventDefault();
+      updateCapCutTotal(true);
+    }
+  });
 
-  updateCapCutTotal();
+  updateCapCutTotal(true);
 }
 
 function openModal(){
@@ -1349,7 +1392,7 @@ function openModal(){
    checkoutBtn.disabled = true;
  } else if(selectedProduct==='CapCut Premium'){
    // initializeCapCutQuantity() sudah menghitung validitas stok/jumlah.
-   updateCapCutTotal();
+   updateCapCutTotal(true);
  } else {
    checkoutBtn.disabled = true;
  }
