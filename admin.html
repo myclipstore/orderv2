@@ -1622,8 +1622,8 @@ async function loadProductDisplayOrderAdmin(silent=false){
       (data.products || [])
         .sort(
           (a,b) =>
-            Number(a.display_order || 9999) -
-            Number(b.display_order || 9999)
+            Number(a.order_position || 9999) -
+            Number(b.order_position || 9999)
         )
         .map(
           row =>
@@ -1684,7 +1684,7 @@ async function saveProductDisplayOrder(){
             productDisplayOrder.map(
               (product_name,index) => ({
                 product_name,
-                display_order:index + 1
+                order_position:index + 1
               })
             )
         }
