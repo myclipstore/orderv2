@@ -1485,7 +1485,8 @@ async function refreshAll(silent=false){
     const tasks = [
       loadTeam(),
       loadVouchers(true),
-      loadOrders(true)
+      loadOrders(true),
+      loadProductDisplayOrderAdmin(true)
     ];
 
     if(!editorOpen){
@@ -1608,7 +1609,7 @@ function moveProductOrder(name,delta){
   renderProductDisplayOrder();
 }
 
-async function loadProductDisplayOrderAdmin(){
+async function loadProductDisplayOrderAdmin(silent=false){
   try{
     const data = await api('list_product_order');
 
@@ -1635,6 +1636,14 @@ async function loadProductDisplayOrderAdmin(){
 
     productDisplayOrder = merged;
     renderProductDisplayOrder();
+
+    if(
+      silent &&
+      $('productOrderMessage')
+    ){
+      $('productOrderMessage').style.display = 'none';
+      $('productOrderMessage').textContent = '';
+    }
 
   }catch(error){
 
