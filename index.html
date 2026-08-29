@@ -851,7 +851,7 @@ async function loadProductDisplayOrder(){
     const response = await fetch(
       SUPABASE_URL +
       "/rest/v1/product_display_order" +
-      "?select=product_name,display_order,active&active=eq.true&order=display_order.asc",
+      "?select=product_name,order_position,active&active=eq.true&order=order_position.asc",
       {
         headers:{
           "apikey": SUPABASE_KEY,
@@ -877,7 +877,7 @@ async function loadProductDisplayOrder(){
     const orderMap = new Map(
       (rows || []).map(row => [
         String(row.product_name || '').trim(),
-        Number(row.display_order || 9999)
+        Number(row.order_position || 9999)
       ])
     );
 
@@ -2315,7 +2315,7 @@ async function reserveWhatsAppStock(productName, packageName, quantity){
   }
 
   const { data, error } = await supabaseClient.rpc(
-    'decrement_product_stock',
+    'consume_manual_stock',
     {
       p_product_name:product,
       p_package_name:pkg,
@@ -2333,7 +2333,11 @@ async function reserveWhatsAppStock(productName, packageName, quantity){
     throw new Error('Stok paket tidak mencukupi.');
   }
 
-  return Number(row.stock || 0);
+  if(row.ok === false){
+    throw new Error(row.message || 'Stok paket tidak mencukupi.');
+  }
+
+  return Number(row.remaining_stock ?? row.stock ?? 0);
 }
 
 
