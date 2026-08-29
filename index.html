@@ -851,7 +851,7 @@ async function loadProductDisplayOrder(){
     const response = await fetch(
       SUPABASE_URL +
       "/rest/v1/product_display_order" +
-      "?select=product_name,order_position,active&active=eq.true&order=order_position.asc",
+      "?select=product_name,display_order,active&active=eq.true&order=display_order.asc",
       {
         headers:{
           "apikey": SUPABASE_KEY,
@@ -877,7 +877,7 @@ async function loadProductDisplayOrder(){
     const orderMap = new Map(
       (rows || []).map(row => [
         String(row.product_name || '').trim(),
-        Number(row.order_position || 9999)
+        Number(row.display_order || 9999)
       ])
     );
 
@@ -2299,6 +2299,44 @@ async function checkoutCanva(){
    ===================================================== */
 
 
+// Reserve stok secara atomik sebelum checkout WhatsApp.
+// Hanya CapCut dan YouTube yang memakai alur ini.
+async function reserveWhatsAppStock(productName, packageName, quantity){
+  const product = String(productName || '').trim();
+  const pkg = String(packageName || '').trim();
+  const qty = Number(quantity);
+
+  if(!['CapCut Premium','YouTube Premium'].includes(product)){
+    throw new Error('Produk ini tidak menggunakan stok WhatsApp.');
+  }
+
+  if(!pkg || !Number.isInteger(qty) || qty < 1){
+    throw new Error('Data stok checkout tidak valid.');
+  }
+
+  const { data, error } = await supabaseClient.rpc(
+    'decrement_product_stock',
+    {
+      p_product_name:product,
+      p_package_name:pkg,
+      p_quantity:qty
+    }
+  );
+
+  if(error){
+    console.error('DECREMENT STOCK ERROR:', error);
+    throw new Error('Stok belum dapat dikurangi. Silakan coba lagi.');
+  }
+
+  const row = Array.isArray(data) ? data[0] : data;
+  if(!row){
+    throw new Error('Stok paket tidak mencukupi.');
+  }
+
+  return Number(row.stock || 0);
+}
+
+
 // Hook checkout button while preserving design for other products.
 document.getElementById('checkout-btn').onclick=async()=>{
  if(selectedProduct==='Canva Premium')return checkoutCanva();
@@ -2323,11 +2361,28 @@ document.getElementById('checkout-btn').onclick=async()=>{
 
    const unitPrice=Number(selectedPrice||0);
    const totalPrice=unitPrice*qty;
-   const message=`*Halo MYCLIPS!*\nSaya ingin memesan:\n━━━━━━━━━━━━━━━━━━\n*Produk:* ${selectedProduct}\n*Paket:* ${selectedPackage}\n*Jumlah:* ${qty}\n*Harga Satuan:* Rp ${unitPrice.toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\n*Total Harga:* Rp ${totalPrice.toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\nMohon diproses ya, terima kasih!`;
 
-   window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`,'_blank');
-   closeModal();
-   showToast('Mengarahkan ke WhatsApp... 📱','success');
+   const checkoutBtn=document.getElementById('checkout-btn');
+   if(checkoutBtn) checkoutBtn.disabled=true;
+
+   try{
+     const remainingStock=await reserveWhatsAppStock(
+       'CapCut Premium',
+       selectedPackage,
+       qty
+     );
+
+     const message=`*Halo MYCLIPS!*\nSaya ingin memesan:\n━━━━━━━━━━━━━━━━━━\n*Produk:* ${selectedProduct}\n*Paket:* ${selectedPackage}\n*Jumlah:* ${qty}\n*Harga Satuan:* Rp ${unitPrice.toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\n*Total Harga:* Rp ${totalPrice.toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\nMohon diproses ya, terima kasih!`;
+
+     await loadProductStock();
+     window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`,'_blank');
+     closeModal();
+     showToast(`Mengarahkan ke WhatsApp... Stok tersisa ${remainingStock}. 📱`,'success');
+   }catch(error){
+     showToast(error?.message || 'Stok gagal diproses.','error');
+   }finally{
+     if(checkoutBtn) checkoutBtn.disabled=false;
+   }
    return;
  }
 
@@ -2345,11 +2400,28 @@ document.getElementById('checkout-btn').onclick=async()=>{
    if(emails.length>stock){ showToast(`Jumlah email melebihi stok. Maksimal ${stock}.`,'error'); return; }
 
    const totalPrice=unitPrice*emails.length;
-   const message=`*Halo MYCLIPS!*\nSaya ingin memesan:\n━━━━━━━━━━━━━━━━━━\n*Produk:* YouTube Premium\n*Paket:* ${selectedPackage}\n*Jumlah:* ${emails.length}\n*Harga Satuan:* Rp ${unitPrice.toLocaleString('id-ID')}\n*Email:* ${emails.join(', ')}\n━━━━━━━━━━━━━━━━━━\n*Total Harga:* Rp ${totalPrice.toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\nMohon diproses ya, terima kasih!`;
 
-   window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`,'_blank');
-   closeModal();
-   showToast('Mengarahkan ke WhatsApp... 📱','success');
+   const checkoutBtn=document.getElementById('checkout-btn');
+   if(checkoutBtn) checkoutBtn.disabled=true;
+
+   try{
+     const remainingStock=await reserveWhatsAppStock(
+       'YouTube Premium',
+       selectedPackage,
+       emails.length
+     );
+
+     const message=`*Halo MYCLIPS!*\nSaya ingin memesan:\n━━━━━━━━━━━━━━━━━━\n*Produk:* YouTube Premium\n*Paket:* ${selectedPackage}\n*Jumlah:* ${emails.length}\n*Harga Satuan:* Rp ${unitPrice.toLocaleString('id-ID')}\n*Email:* ${emails.join(', ')}\n━━━━━━━━━━━━━━━━━━\n*Total Harga:* Rp ${totalPrice.toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\nMohon diproses ya, terima kasih!`;
+
+     await loadProductStock();
+     window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`,'_blank');
+     closeModal();
+     showToast(`Mengarahkan ke WhatsApp... Stok tersisa ${remainingStock}. 📱`,'success');
+   }catch(error){
+     showToast(error?.message || 'Stok gagal diproses.','error');
+   }finally{
+     if(checkoutBtn) checkoutBtn.disabled=false;
+   }
    return;
  }
 
