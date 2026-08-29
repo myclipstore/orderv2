@@ -687,7 +687,7 @@
           <button type="button" onclick="removeSingleEmailInput(this)" class="text-pink-400 hover:text-pink-600 text-lg font-bold hidden">✕</button>
          </div>
         </div>
-        <button type="button" onclick="addSingleEmailInput()" class="text-xs text-pink-500 hover:text-pink-600 font-medium mt-2">+ Tambah Email</button>
+        <button id="single-add-email-btn" type="button" onclick="addSingleEmailInput()" class="text-xs text-pink-500 hover:text-pink-600 font-medium mt-2">+ Tambah Email</button>
         <p id="single-email-error" class="text-red-500 text-xs mt-2 hidden"></p>
         <p id="single-email-success" class="text-green-500 text-xs mt-2 hidden"></p>
         <p id="price-total" class="text-pink-500 font-bold text-sm mt-3 text-center hidden">Total: <span id="total-price">Rp 3K</span></p>
@@ -1377,107 +1377,227 @@ function getYouTubeStock(){
   );
 }
 
-function updateYouTubeTotal(normalize=false){
-  const qtyInput = document.getElementById('capcut-qty');
-  const totalEl = document.getElementById('capcut-total-price');
+function getSingleEmails(){
+  return Array.from(
+    document.querySelectorAll(
+      '#single-emails-container .single-email-input'
+    )
+  )
+  .map(input => String(input.value || '').trim().toLowerCase())
+  .filter(Boolean);
+}
+
+function validateSingleEmails(){
+  const inputs = Array.from(
+    document.querySelectorAll(
+      '#single-emails-container .single-email-input'
+    )
+  );
+
+  const validPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emails = inputs
+    .map(input => String(input.value || '').trim().toLowerCase());
+  const filled = emails.filter(Boolean);
+  const invalid = emails.some(email => email && !validPattern.test(email));
+  const duplicate = new Set(filled).size !== filled.length;
+
+  const errorEl = document.getElementById('single-email-error');
+  const successEl = document.getElementById('single-email-success');
+
+  if(errorEl){
+    errorEl.classList.toggle(
+      'hidden',
+      !(invalid || duplicate)
+    );
+    errorEl.textContent =
+      invalid
+        ? 'Ada alamat email yang tidak valid.'
+        : duplicate
+          ? 'Email tidak boleh sama.'
+          : '';
+  }
+
+  if(successEl){
+    successEl.classList.toggle(
+      'hidden',
+      filled.length === 0 || invalid || duplicate
+    );
+    successEl.textContent =
+      filled.length > 0 && !invalid && !duplicate
+        ? `${filled.length} email valid.`
+        : '';
+  }
+
+  if(selectedProduct === 'YouTube Premium'){
+    updateYouTubeTotal();
+  }
+
+  return {
+    inputs,
+    emails: filled,
+    valid: filled.length > 0 && !invalid && !duplicate
+  };
+}
+
+function initializeSingleEmails(){
+  const container = document.getElementById('single-emails-container');
+  if(!container) return;
+
+  const first = container.querySelector('.single-email-input');
+  if(!first) return;
+
+  const inputs = container.querySelectorAll('.single-email-input');
+  inputs.forEach(input => {
+    input.oninput = () => validateSingleEmails();
+  });
+
+  const removeButtons = container.querySelectorAll('button');
+  removeButtons.forEach(btn => {
+    btn.classList.toggle('hidden', inputs.length <= 1);
+  });
+}
+
+function addSingleEmailInput(){
+  if(selectedProduct !== 'Canva Premium' && selectedProduct !== 'YouTube Premium'){
+    return;
+  }
+
+  const container = document.getElementById('single-emails-container');
+  if(!container) return;
+
+  const stock = getYouTubeStock();
+  const currentCount = container.querySelectorAll('.single-email-input').length;
+
+  if(selectedProduct === 'YouTube Premium' && currentCount >= stock){
+    showToast(`Maksimal ${stock} email sesuai stok tersedia.`, 'error');
+    return;
+  }
+
+  const next = currentCount + 1;
+  const row = document.createElement('div');
+  row.className = 'flex gap-2 items-center';
+  row.innerHTML = `
+    <input
+      type="email"
+      name="canva_email_${next}"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="none"
+      spellcheck="false"
+      inputmode="email"
+      class="flex-1 px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors single-email-input"
+      placeholder="contoh@gmail.com"
+    >
+    <button
+      type="button"
+      onclick="removeSingleEmailInput(this)"
+      class="text-pink-400 hover:text-pink-600 text-lg font-bold"
+    >✕</button>
+  `;
+  container.appendChild(row);
+
+  const input = row.querySelector('.single-email-input');
+  input.addEventListener('input', () => validateSingleEmails());
+  validateSingleEmails();
+}
+
+function removeSingleEmailInput(button){
+  const row = button?.closest('.flex');
+  if(row) row.remove();
+
+  const container = document.getElementById('single-emails-container');
+  if(container){
+    const inputs = container.querySelectorAll('.single-email-input');
+    container.querySelectorAll('button[onclick="removeSingleEmailInput(this)"]')
+      .forEach(btn => btn.classList.toggle('hidden', inputs.length <= 1));
+  }
+
+  validateSingleEmails();
+}
+
+function updateYouTubeTotal(){
+  const totalEl = document.getElementById('total-price');
+  const priceTotal = document.getElementById('price-total');
   const checkoutBtn = document.getElementById('checkout-btn');
-  if(!qtyInput) return;
+  const stockEl = document.getElementById('youtube-stock-info');
+  const stock = getYouTubeStock();
+  const result = validateSingleEmails._running
+    ? {emails: getSingleEmails(), valid: true}
+    : null;
 
-  const maxStock = getYouTubeStock();
-  qtyInput.max = String(Math.max(1, maxStock));
+  const emails = result
+    ? result.emails
+    : Array.from(
+        document.querySelectorAll(
+          '#single-emails-container .single-email-input'
+        )
+      )
+        .map(input => String(input.value || '').trim().toLowerCase())
+        .filter(Boolean);
 
-  let raw = String(qtyInput.value ?? '').trim();
+  const validPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const invalid = emails.some(email => !validPattern.test(email));
+  const duplicate = new Set(emails).size !== emails.length;
 
-  if(raw === ''){
-    youtubeQuantity = 0;
-    if(totalEl) totalEl.textContent = 'Rp 0';
-    if(checkoutBtn) checkoutBtn.disabled = true;
-    return;
+  youtubeQuantity = emails.length;
+
+  if(stockEl){
+    stockEl.innerHTML =
+      `Stok tersedia: <strong>${stock}</strong>` +
+      (emails.length > 0 ? ` · Dipilih: <strong>${emails.length}</strong>` : '');
   }
-
-  let qty = Number(raw);
-
-  if(!Number.isInteger(qty) || qty < 1){
-    youtubeQuantity = 0;
-    if(totalEl) totalEl.textContent = 'Rp 0';
-    if(checkoutBtn) checkoutBtn.disabled = true;
-    return;
-  }
-
-  if(qty > maxStock){
-    if(normalize){
-      qty = maxStock;
-      qtyInput.value = String(maxStock);
-    }else{
-      youtubeQuantity = qty;
-      if(totalEl){
-        totalEl.textContent = formatPriceShort(
-          Number(selectedPrice || 0) * qty
-        );
-      }
-      if(checkoutBtn) checkoutBtn.disabled = true;
-      return;
-    }
-  }
-
-  youtubeQuantity = qty;
 
   if(totalEl){
     totalEl.textContent = formatPriceShort(
-      Number(selectedPrice || 0) * qty
+      Number(selectedPrice || 0) * emails.length
     );
+  }
+
+  if(priceTotal){
+    priceTotal.classList.remove('hidden');
   }
 
   if(checkoutBtn){
     checkoutBtn.disabled = !(
-      maxStock > 0 &&
-      selectedPrice &&
-      qty >= 1 &&
-      qty <= maxStock
+      stock > 0 &&
+      emails.length > 0 &&
+      emails.length <= stock &&
+      Number(selectedPrice || 0) > 0 &&
+      !invalid &&
+      !duplicate
     );
   }
 }
 
-function initializeYouTubeQuantity(){
-  const container = document.getElementById('capcut-qty-container');
-  const checkoutBtn = document.getElementById('checkout-btn');
-  if(!container || !checkoutBtn) return;
+function initializeYouTubeEmail(){
+  const addEmailBtn = document.getElementById('single-add-email-btn');
+  const priceTotal = document.getElementById('price-total');
+  let stockSection = document.getElementById('youtube-stock-info');
 
-  const maxStock = getYouTubeStock();
-  youtubeQuantity = 1;
+  if(addEmailBtn){
+    addEmailBtn.classList.remove('hidden');
+    addEmailBtn.textContent = '+ Tambah Email';
+  }
 
-  container.innerHTML = `
-    <label class="block text-gray-600 text-sm font-medium mb-2">Jumlah</label>
-    <div class="flex items-center gap-2">
-      <input
-        id="capcut-qty"
-        type="number"
-        min="1"
-        max="${Math.max(1, maxStock)}"
-        value="1"
-        inputmode="numeric"
-        step="1"
-        autocomplete="off"
-        class="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors"
-      >
-    </div>
-    <p class="text-xs text-gray-500 mt-2">
-      Stok tersedia: <strong>${maxStock}</strong>
-    </p>
-  `;
+  if(priceTotal){
+    priceTotal.classList.remove('hidden');
+  }
 
-  const qtyInput=document.getElementById('capcut-qty');
-  qtyInput?.addEventListener('input',()=>updateYouTubeTotal(false));
-  qtyInput?.addEventListener('change',()=>updateYouTubeTotal(true));
-  qtyInput?.addEventListener('blur',()=>updateYouTubeTotal(true));
-  qtyInput?.addEventListener('keydown',event=>{
-    if(event.key==='Enter'){
-      event.preventDefault();
-      updateYouTubeTotal(true);
+  if(!stockSection){
+    const p = document.createElement('p');
+    p.id = 'youtube-stock-info';
+    p.className = 'text-xs text-gray-500 mt-2';
+    const container = document.getElementById('single-emails-container');
+    if(container){
+      container.insertAdjacentElement('afterend', p);
+      stockSection = p;
     }
-  });
+  }
 
-  updateYouTubeTotal(true);
+  initializeSingleEmails();
+
+  validateSingleEmails();
+  updateYouTubeTotal();
 }
 
 function initializeCapCutQuantity(){
@@ -1531,6 +1651,9 @@ function openModal(){
  const group=document.getElementById('group-email-section');
  const cap=document.getElementById('capcut-quantity-section');
 
+ const addEmailBtn = document.getElementById('single-add-email-btn');
+ if(addEmailBtn) addEmailBtn.classList.remove('hidden');
+
  if(selectedProduct==='Canva Premium'){
   icon.textContent='🎨';title.textContent=getCanvaDisplayTitle(selectedPackage);
   packageInfo.textContent=`${selectedPackage} - ${formatPriceShort(selectedPrice)}`;
@@ -1543,815 +1666,20 @@ function openModal(){
   cap.classList.remove('hidden');single.classList.add('hidden');group.classList.add('hidden');document.getElementById('canva-voucher-wrap').classList.add('hidden');
   initializeCapCutQuantity();
  } else if(selectedProduct==='YouTube Premium'){
-  icon.textContent='▶️';title.textContent=selectedProduct;packageInfo.textContent=`${selectedPackage} - ${formatPriceShort(selectedPrice)}`;
-  cap.classList.remove('hidden');single.classList.remove('hidden');group.classList.add('hidden');document.getElementById('canva-voucher-wrap').classList.add('hidden');
-  initializeSingleEmails();
-  initializeYouTubeQuantity();
- } else {
-  icon.textContent='🤖';title.textContent=selectedProduct;packageInfo.textContent=`${selectedPackage} - ${formatPriceShort(selectedPrice)}`;
-  cap.classList.add('hidden');group.classList.add('hidden');single.classList.remove('hidden');document.getElementById('canva-voucher-wrap').classList.add('hidden');initializeSingleEmails();
- }
- const checkoutBtn = document.getElementById('checkout-btn');
- if(selectedProduct==='Canva Premium'){
-   checkoutBtn.disabled = true;
- } else if(selectedProduct==='CapCut Premium'){
-   updateCapCutTotal(true);
- } else if(selectedProduct==='YouTube Premium'){
-   updateYouTubeTotal(true);
- } else {
-   checkoutBtn.disabled = true;
- }
- checkoutBtn.textContent=selectedProduct==='Canva Premium'?'Bayar Sekarang':'Checkout via WhatsApp';
- modal.classList.remove('hidden');
-}
-function closeModal(){
- document.getElementById('email-modal').classList.add('hidden');
-
- document.querySelectorAll('.package-option').forEach(function(p){
-   p.classList.remove('selected');
- });
-
- const emailEl=document.querySelector('#single-emails-container .single-email-input');
- const voucherEl=document.getElementById('canva-voucher');
-
- if(emailEl) emailEl.value='';
- if(voucherEl) voucherEl.value='';
-
- const err=document.getElementById('single-email-error');
- const ok=document.getElementById('single-email-success');
-
- if(err) err.classList.add('hidden');
- if(ok) ok.classList.add('hidden');
-
- document
-   .querySelectorAll(
-     '#single-emails-container .single-email-input'
-   )
-   .forEach(
-     input => {
-       input.value = '';
-       input.removeAttribute('value');
-     }
-   );
-
- const price=document.getElementById('price-total');
-
- if(price) price.classList.add('hidden');
-
- selectedProduct=null;
- selectedPackage=null;
- selectedPrice=null;
- capcutQuantity=1;
- youtubeQuantity=1;
- needsEmail=false;
- isCapCut=false;
-}
-
-function initializeCanvaEmail(){
- const container=document.getElementById('single-emails-container');
- container.innerHTML='';
-
- addSingleEmailInput(true);
-
- validateSingleEmails();
-}
-
-function initializeSingleEmails(){
- const c=document.getElementById('single-emails-container');
- c.innerHTML='';
-
- addSingleEmailInput(true);
-
- validateSingleEmails();
-}
-
-function addSingleEmailInput(isFirst=false){
-
- const container =
-   document.getElementById(
-     'single-emails-container'
-   );
-
- if(!container){
-   return;
- }
-
- const currentCount =
-   container.querySelectorAll(
-     '.single-email-input'
-   ).length;
-
- const maxEmails =
-   10;
-
- if(
-   currentCount >=
-   maxEmails
- ){
-
-   showToast(
-     'Maksimal 10 email dalam satu proses.',
-     'error'
-   );
-
-   return;
- }
-
- const emailIndex =
-   currentCount + 1;
-
- const wrap =
-   document.createElement(
-     'div'
-   );
-
- wrap.className =
-   'flex gap-2 items-center';
-
- /*
-  * Setiap input diberi NAME + autocomplete section
-  * yang berbeda agar Chrome/Edge/password manager
-  * tidak menganggap semua field email sebagai field
-  * yang sama dan mengisi email pertama ke field kedua.
-  */
- wrap.innerHTML = `
-   <input
-     type="email"
-     name="canva_email_${emailIndex}"
-     id="canva-email-${emailIndex}"
-     class="flex-1 px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors single-email-input"
-     placeholder="contoh@gmail.com"
-     autocomplete="section-canva-${emailIndex} email"
-     autocorrect="off"
-     autocapitalize="none"
-     spellcheck="false"
-     inputmode="email"
-     data-form-type="other"
-     data-lpignore="true"
-     data-1p-ignore="true"
-     oninput="validateSingleEmails()"
-   >
-   <button
-     type="button"
-     onclick="removeSingleEmailInput(this)"
-     class="text-pink-400 hover:text-pink-600 text-lg font-bold ${
-       isFirst
-         ? 'hidden'
-         : ''
-     }"
-   >
-     ✕
-   </button>
- `;
-
- container.appendChild(
-   wrap
- );
-
- const newInput =
-   wrap.querySelector(
-     '.single-email-input'
-   );
-
-
-}
-
-/*
- * Guard untuk input email multi-field.
- *
- * Jika browser/password-manager mencoba menyalin
- * nilai email aktif ke field lain saat keyboard digunakan,
- * field lain tidak dibiarkan ikut terisi.
- */
-document.addEventListener(
-  "focusin",
-  event => {
-
-    const input =
-      event.target?.closest(
-        "#single-emails-container .single-email-input"
-      );
-
-    if(
-      !input
-    ){
-      return;
-    }
-
-    document
-      .querySelectorAll(
-        "#single-emails-container .single-email-input"
-      )
-      .forEach(
-        other => {
-
-          if(
-            other !== input &&
-            other.dataset.autoFilledMirror === "1"
-          ){
-
-            other.value = "";
-
-            delete other.dataset
-              .autoFilledMirror;
-
-          }
-
-        }
-      );
-
-  }
-);
-
-
-function removeSingleEmailInput(
- button
-){
-
- const wrap =
-   button?.closest(
-     '.flex'
-   );
-
- if(
-   wrap
- ){
-
-   wrap.remove();
-
- }
-
- validateSingleEmails();
-
-}
-
-function validateSingleEmails(){
-
- const inputs =
-   Array.from(
-     document.querySelectorAll(
-       '#single-emails-container .single-email-input'
-     )
-   );
-
- const emails =
-   inputs
-     .map(
-       input =>
-         input.value
-           .trim()
-           .toLowerCase()
-     )
-     .filter(Boolean);
-
- const pattern =
-   /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
- const validFormat =
-   emails.length > 0 &&
-   emails.every(
-     email =>
-       pattern.test(
-         email
-       )
-   );
-
- const unique =
-   new Set(
-     emails
-   ).size ===
-   emails.length;
-
- const duplicate =
-   emails.length >
-     0 &&
-   !unique;
-
- const errorEl =
-   document.getElementById(
-     'single-email-error'
-   );
-
- const successEl =
-   document.getElementById(
-     'single-email-success'
-   );
-
- if(
-   duplicate
- ){
-
-   if(errorEl){
-     errorEl.textContent =
-       'Email tidak boleh sama.';
-     errorEl.classList.remove(
-       'hidden'
-     );
-   }
-
-   if(successEl){
-     successEl.classList.add(
-       'hidden'
-     );
-   }
-
- }
- else if(
-   emails.length >
-     0 &&
-   !validFormat
- ){
-
-   if(errorEl){
-     errorEl.textContent =
-       'Ada email yang belum valid.';
-     errorEl.classList.remove(
-       'hidden'
-     );
-   }
-
-   if(successEl){
-     successEl.classList.add(
-       'hidden'
-     );
-   }
-
- }
- else{
-
-   if(errorEl){
-     errorEl.classList.add(
-       'hidden'
-     );
-   }
-
-   if(successEl){
-
-     successEl.textContent =
-       emails.length > 1
-         ? `✅ ${emails.length} email valid. Masing-masing akan dibuatkan order terpisah.`
-         : '✅ Email valid!';
-
-     successEl.classList.toggle(
-       'hidden',
-       !validFormat ||
-       !unique
-     );
-
-   }
-
- }
-
- const checkout =
-   document.getElementById(
-     'checkout-btn'
-   );
-
- if(
-   checkout
- ){
-
-   checkout.disabled =
-     !validFormat ||
-     !unique;
-
- }
-
-}
-
-function initializeGroupEmails(){
- initializeCanvaEmail();
-}
-
-function addGroupEmailInput(){
- addSingleEmailInput(false);
-}
-
-function removeGroupEmailInput(
- button
-){
- removeSingleEmailInput(
-   button
- );
-}
-
-function validateGroupEmails(){
- validateSingleEmails();
-}
-
-
-/* =====================================================
-   CANVA MULTI-EMAIL CHECKOUT
-   ===================================================== */
-
-async function createPaymentBatch(
-  emails,
-  pkg,
-  name,
-  voucher
-){
-
-  const response =
-    await fetch(
-      CREATE_ORDER_URL,
-      {
-        method:
-          'POST',
-
-        headers:{
-          'Content-Type':
-            'application/json',
-
-          'apikey':
-            SUPABASE_KEY,
-
-          'Authorization':
-            'Bearer ' +
-            SUPABASE_KEY
-        },
-
-        body:
-          JSON.stringify({
-
-            package_code:
-              pkg,
-
-            customer_name:
-              name,
-
-            customer_emails:
-              emails,
-
-            voucher_code:
-              voucher ||
-              undefined
-
-          })
-      }
-    );
-
-
-  const data =
-    await response
-      .json()
-      .catch(
-        () => ({})
-      );
-
-
-  if(
-    !response.ok ||
-    !data.ok
-  ){
-
-    throw new Error(
-      data.error ||
-      'Gagal membuat pembayaran.'
-    );
-
-  }
-
-
-  return data;
-
-}
-
-
-function openPaymentBatch(
-  data
-){
-
-  return new Promise(
-    (
-      resolve,
-      reject
-    ) => {
-
-      window.snap.pay(
-        data.snap_token,
-        {
-
-          onSuccess:
-            () =>
-              resolve(data),
-
-          onPending:
-            () =>
-              reject(
-                new Error(
-                  'Pembayaran belum selesai.'
-                )
-              ),
-
-          onError:
-            () =>
-              reject(
-                new Error(
-                  'Pembayaran gagal.'
-                )
-              ),
-
-          onClose:
-            () =>
-              reject(
-                new Error(
-                  'Jendela pembayaran ditutup.'
-                )
-              )
-
-        }
-      );
-
-    }
-  );
-
-}
-
-
-async function checkoutCanva(){
-
-  /*
-   * NAMA PEMBELI SUDAH DIHAPUS DARI FORM.
-   * Tidak ada lagi validasi nama.
-   * Backend akan memakai email pertama sebagai identitas internal.
-   */
-  const name = '';
-
-  const emailInputs = Array.from(
-    document.querySelectorAll(
-      '#single-emails-container .single-email-input'
-    )
-  );
-
-  const emails = emailInputs
-    .map(input => input.value.trim().toLowerCase())
-    .filter(Boolean);
-
-  const voucher =
-    document.getElementById('canva-voucher')?.value.trim().toUpperCase() || '';
-
-  if(!emails.length){
-    showToast('Masukkan minimal satu email Canva.','error');
-    return;
-  }
-
-  if(emails.length > 10){
-    showToast('Maksimal 10 email untuk satu pembelian.','error');
-    return;
-  }
-
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  if(!emails.every(email => emailPattern.test(email))){
-    showToast('Pastikan semua email valid.','error');
-    return;
-  }
-
-  if(new Set(emails).size !== emails.length){
-    showToast('Email tidak boleh sama.','error');
-    return;
-  }
-
-  if(!selectedPackage){
-    showToast('Pilih paket Canva terlebih dahulu.','error');
-    return;
-  }
-
-  const isGroup =
-    selectedPackage === 'Paket Grup (10 akun)/Bulan';
-
-  const stockKnown =
-    Object.prototype.hasOwnProperty.call(productStock,'Canva Premium') &&
-    Object.prototype.hasOwnProperty.call(
-      productStock['Canva Premium'] || {},
-      selectedPackage
-    );
-
-  const requiredStock = isGroup ? 1 : emails.length;
-
-  if(
-    !stockKnown ||
-    getStockValue('Canva Premium', selectedPackage) < requiredStock
-  ){
-    showToast(
-      isGroup
-        ? 'Stok Paket Grup sedang habis.'
-        : 'Stok paket ini tidak mencukupi.',
-      'error'
-    );
-    closeModal();
-    return;
-  }
-
-  const packageMap = {
-    '1 Bulan':'1',
-    '2 Bulan':'2',
-    '3 Bulan':'3',
-    'Paket Grup (10 akun)/Bulan':'GROUP10'
-  };
-
-  const pkg = packageMap[selectedPackage];
-
-  if(!pkg){
-    showToast('Paket Canva tidak valid.','error');
-    return;
-  }
-
-  const btn = document.getElementById('checkout-btn');
-
-  if(!btn) return;
-
-  btn.disabled = true;
-  btn.textContent = isGroup
-    ? 'Menyiapkan Paket Grup...'
-    : 'Menyiapkan pembayaran...';
-
-  try{
-
-    lastCanvaEmail = emails[0];
-
-    localStorage.setItem(
-      'myclips_canva_email',
-      emails[0]
-    );
-
-    localStorage.removeItem('myclips_canva_name');
-
-    /*
-     * Satu request = satu payment batch.
-     * Paket biasa: backend membuat satu order per email.
-     * Paket Grup: backend membuat satu order untuk seluruh email.
-     */
-    const data = await createPaymentBatch(
-      emails,
-      pkg,
-      name,
-      voucher
-    );
-
-    const paidData = await openPaymentBatch(data);
-
-    closeModal();
-
-    const orderMessage = isGroup
-      ? `Pembayaran berhasil untuk Paket Grup dengan ${emails.length} email. 1 kode order digunakan untuk seluruh email.`
-      : `Pembayaran berhasil untuk ${emails.length} email. Akses sedang diproses.`;
-
-    showDbResult(
-      paidData,
-      orderMessage
-    );
-
-    /*
-     * Segarkan stok setelah pembayaran sukses.
-     * Jika webhook sudah mengurangi stok, kartu produk
-     * langsung berubah menjadi STOK HABIS / TERSEDIA.
-     */
-    await loadProductStock();
-
-    /*
-     * Tunggu akses masing-masing email.
-     * Paket Grup tetap memakai satu order_code.
-     */
-    const accessTasks = [];
-
-    for(const item of (paidData.orders || [])){
-
-      const targetEmails = isGroup
-        ? emails
-        : [item.customer_email];
-
-      for(const email of targetEmails){
-        accessTasks.push(
-          waitForAccess(
-            item.order_code,
-            email,
-            paidData
-          ).catch(accessError => {
-            console.warn(
-              'Akses belum siap:',
-              accessError
-            );
-            return false;
-          })
-        );
-      }
-    }
-
-    const accessResults = await Promise.all(accessTasks);
-    const allAccessReady = accessResults.length === 0 || accessResults.every(Boolean);
-    const accessStatusEl = document.getElementById('db-result-access-status');
-
-    if(accessStatusEl){
-      if(allAccessReady){
-        accessStatusEl.classList.add('hidden');
-      }else{
-        accessStatusEl.textContent = 'Pembayaran berhasil. Sebagian akses Canva masih disiapkan. Silakan cek Riwayat Pembelian.';
-        accessStatusEl.classList.remove('hidden');
-      }
-    }
-
-    // Persistir tampilan struk terbaru, termasuk tombol Akses Canva.
-    saveReceiptSnapshot();
-
-    /*
-     * Refresh stok sekali lagi setelah webhook/access processing
-     * agar perubahan stok terbaru langsung terbaca.
-     */
-    await loadProductStock();
-
-    loadCanvaHistory(lastCanvaEmail);
-
-  }catch(error){
-
-    showToast(
-      error?.message ||
-      'Pembayaran dihentikan.',
-      'error'
-    );
-
-  }finally{
-
-    btn.disabled = false;
-    btn.textContent = 'Bayar Sekarang';
-
-  }
-
-}
-
-/* =====================================================
-   END CANVA MULTI-EMAIL CHECKOUT
-   ===================================================== */
-
-/* =====================================================
-   END CANVA MULTI-EMAIL CHECKOUT
-   ===================================================== */
-
-
-// Hook checkout button while preserving design for other products.
-document.getElementById('checkout-btn').onclick=async()=>{
- if(selectedProduct==='Canva Premium')return checkoutCanva();
-
- const config=window.elementSdk?.config||{whatsapp_number:'85707486749'};
- const waRaw=String(config.whatsapp_number||'85707486749').replace(/\D/g,'');
- const waNumber=waRaw.startsWith('62') ? waRaw : `62${waRaw.replace(/^0/,'')}`;
-
- if(selectedProduct==='CapCut Premium'){
-   const stock=getCapCutStock();
-   const qty=Math.max(1,Number(capcutQuantity||1));
-
-   if(stock<=0){
-     showToast('Stok paket CapCut ini sedang habis.','error');
-     return;
-   }
-
-   if(qty>stock){
-     showToast(`Jumlah melebihi stok. Maksimal ${stock}.`,'error');
-     return;
-   }
-
-   const unitPrice=Number(selectedPrice||0);
-   const totalPrice=unitPrice*qty;
-   const message=`*Halo MYCLIPS!*\nSaya ingin memesan:\n━━━━━━━━━━━━━━━━━━\n*Produk:* ${selectedProduct}\n*Paket:* ${selectedPackage}\n*Jumlah:* ${qty}\n*Harga Satuan:* Rp ${unitPrice.toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\n*Total Harga:* Rp ${totalPrice.toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\nMohon diproses ya, terima kasih!`;
-
-   window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`,'_blank');
-   closeModal();
-   showToast('Mengarahkan ke WhatsApp... 📱','success');
-   return;
- }
-
- if(selectedProduct==='YouTube Premium'){
    const stock=getYouTubeStock();
-   const qty=Math.max(1,Number(youtubeQuantity||1));
 
    if(stock<=0){
      showToast('Stok paket YouTube Premium ini sedang habis.','error');
      return;
    }
 
-   if(qty>stock){
-     showToast(`Jumlah melebihi stok. Maksimal ${stock}.`,'error');
-     return;
-   }
+   cap.classList.add('hidden');
+   group.classList.add('hidden');
+   single.classList.remove('hidden');
+   document.getElementById('canva-voucher-wrap').classList.add('hidden');
+   initializeYouTubeEmail();
 
-   const emailInput=document.querySelector(
-     '#single-emails-container .single-email-input'
-   );
-   const email=String(emailInput?.value||'').trim().toLowerCase();
-   const emailPattern=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-   if(!email || !emailPattern.test(email)){
-     showToast('Masukkan email yang valid.','error');
-     return;
-   }
-
-   const unitPrice=Number(selectedPrice||0);
-   const totalPrice=unitPrice*qty;
-   const message=`*Halo MYCLIPS!*\nSaya ingin memesan:\n━━━━━━━━━━━━━━━━━━\n*Produk:* ${selectedProduct}\n*Paket:* ${selectedPackage}\n*Jumlah:* ${qty}\n*Harga Satuan:* Rp ${unitPrice.toLocaleString('id-ID')}\n*Email:* ${email}\n━━━━━━━━━━━━━━━━━━\n*Total Harga:* Rp ${totalPrice.toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\nMohon diproses ya, terima kasih!`;
-
-   window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`,'_blank');
-   closeModal();
-   showToast('Mengarahkan ke WhatsApp... 📱','success');
+   document.getElementById('email-modal').classList.remove('hidden');
    return;
  }
 
@@ -2362,6 +1690,102 @@ document.getElementById('checkout-btn').onclick=async()=>{
  closeModal();showToast('Mengarahkan ke WhatsApp... 📱','success');
 };
 
+
+function processCheckout(){
+  if(selectedProduct === 'YouTube Premium'){
+    const validation = validateSingleEmails();
+    const emails = validation.emails;
+    const stock = getYouTubeStock();
+
+    if(!validation.valid){
+      showToast('Masukkan email yang valid.', 'error');
+      return;
+    }
+
+    if(emails.length > stock){
+      showToast(`Email melebihi stok tersedia (${stock}).`, 'error');
+      return;
+    }
+
+    const unitPrice = Number(selectedPrice || 0);
+    const totalPrice = unitPrice * emails.length;
+
+    const message = [
+      '*Halo MYCLIPS!*',
+      'Saya ingin memesan:',
+      '━━━━━━━━━━━━━━━━━━',
+      `*Produk:* ${selectedProduct}`,
+      `*Paket:* ${selectedPackage}`,
+      `*Jumlah:* ${emails.length}`,
+      `*Harga Satuan:* Rp ${unitPrice.toLocaleString('id-ID')}`,
+      `*Email:* ${emails.join(', ')}`,
+      '━━━━━━━━━━━━━━━━━━',
+      `*Total Harga:* Rp ${totalPrice.toLocaleString('id-ID')}`,
+      '━━━━━━━━━━━━━━━━━━',
+      'Mohon diproses ya, terima kasih!'
+    ].join('\n');
+
+    window.open(
+      `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`,
+      '_blank'
+    );
+
+    closeModal();
+    showToast(`${emails.length} pesanan YouTube dikirim ke WhatsApp.`, 'success');
+    return;
+  }
+
+  if(selectedProduct === 'CapCut Premium'){
+    const qty = Math.max(1, Number(capcutQuantity || 1));
+    const stock = getCapCutStock();
+    if(!Number.isInteger(qty) || qty > stock){
+      showToast('Jumlah melebihi stok tersedia.', 'error');
+      return;
+    }
+    const unitPrice = Number(selectedPrice || 0);
+    const message = [
+      '*Halo MYCLIPS!*',
+      'Saya ingin memesan:',
+      '━━━━━━━━━━━━━━━━━━',
+      `*Produk:* ${selectedProduct}`,
+      `*Paket:* ${selectedPackage}`,
+      `*Jumlah:* ${qty}`,
+      `*Harga Satuan:* Rp ${unitPrice.toLocaleString('id-ID')}`,
+      '━━━━━━━━━━━━━━━━━━',
+      `*Total Harga:* Rp ${(unitPrice * qty).toLocaleString('id-ID')}`,
+      '━━━━━━━━━━━━━━━━━━',
+      'Mohon diproses ya, terima kasih!'
+    ].join('\n');
+    window.open(
+      `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`,
+      '_blank'
+    );
+    closeModal();
+    showToast('Mengarahkan ke WhatsApp... 📱','success');
+    return;
+  }
+
+  // Fallback untuk produk lain.
+  const emails = getSingleEmails();
+  const unitPrice = Number(selectedPrice || 0);
+  const message = [
+    '*Halo MYCLIPS!*',
+    'Saya ingin memesan:',
+    '━━━━━━━━━━━━━━━━━━',
+    `*Produk:* ${selectedProduct}`,
+    `*Paket:* ${selectedPackage}`,
+    '*Jumlah:* 1',
+    `*Harga Satuan:* Rp ${unitPrice.toLocaleString('id-ID')}`,
+    emails.length ? `*Email:* ${emails.join(', ')}` : '',
+    '━━━━━━━━━━━━━━━━━━',
+    `*Total Harga:* Rp ${unitPrice.toLocaleString('id-ID')}`,
+    '━━━━━━━━━━━━━━━━━━',
+    'Mohon diproses ya, terima kasih!'
+  ].filter(Boolean).join('\n');
+  window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`,'_blank');
+  closeModal();
+  showToast('Mengarahkan ke WhatsApp... 📱','success');
+}
 
 function makeResetWhatsAppUrl(order){
  const waNumber='6285707486749';
