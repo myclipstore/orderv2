@@ -621,6 +621,7 @@
             <p class="text-xs text-gray-500 mt-1">👤 1 akun</p>
            </div>
            <div class="text-right">
+            <span class="text-gray-400 text-sm strikethrough">Rp 20K</span>
             <p class="font-bold text-pink-500 text-lg">Rp 19K</p>
            </div>
           </div>
@@ -805,6 +806,7 @@ const PURCHASE_HISTORY_URL=SUPABASE_URL+"/functions/v1/purchase-history";
 const GET_ACCESS_URL=SUPABASE_URL+"/functions/v1/get-access";
 const CONSUME_ACCESS_URL=SUPABASE_URL+"/functions/v1/consume-access";
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const CONSUME_MANUAL_STOCK_RPC="consume_manual_stock";
 
 const canvaPackages={
   "1 Bulan":{code:"1",name:"Canva 1 Bulan",months:1,price:3000},
@@ -969,6 +971,20 @@ function applyDynamicStrikePrices(){
     const strikeMonth = capcutMonth?.querySelector('.strikethrough');
     if(strike14) strike14.textContent = formatPriceShort(capcut7 * 2);
     if(strikeMonth) strikeMonth.textContent = formatPriceShort(capcut7 * 4);
+  }
+
+  // YouTube Premium: 2 Bulan = 2 x harga 1 Bulan.
+  const youtubeMonthly = getPrice('YouTube Premium', '1 Bulan');
+  const youtubeTwoMonth = document.querySelector(
+    '.package-option[data-product="YouTube Premium"][data-package="2 Bulan"]'
+  );
+  if(youtubeMonthly > 0 && youtubeTwoMonth){
+    const strikeYoutube =
+      youtubeTwoMonth.querySelector('.strikethrough');
+    if(strikeYoutube){
+      strikeYoutube.textContent =
+        formatPriceShort(youtubeMonthly * 2);
+    }
   }
 
   // ChatGPT: 15 Hari = 2 x harga 15 Hari; 30 Hari = 4 x harga 15 Hari.
@@ -2236,6 +2252,22 @@ async function checkoutCanva(){
    ===================================================== */
 
 
+async function consumeYouTubeStock(quantity){
+ const qty=Number(quantity||0);
+ if(!Number.isInteger(qty)||qty<=0) throw new Error("Jumlah stok tidak valid.");
+ const product="YouTube Premium";
+ const packageName=String(selectedPackage||"").trim();
+ const {data,error}=await supabaseClient.rpc(CONSUME_MANUAL_STOCK_RPC,{p_product_name:product,p_package_name:packageName,p_quantity:qty});
+ if(error){ console.error("CONSUME YOUTUBE STOCK ERROR",error); throw new Error(error.message||"Gagal mengurangi stok YouTube."); }
+ const result=Array.isArray(data)?data[0]:data;
+ if(!result?.ok) throw new Error(result?.message||"Stok YouTube tidak mencukupi.");
+ if(!productStock[product]) productStock[product]={};
+ productStock[product][packageName]=Number(result.remaining_stock||0);
+ applyProductStockState();
+ updateYouTubeSummary();
+ return Number(result.remaining_stock||0);
+}
+
 // Hook checkout button while preserving design for other products.
 document.getElementById('checkout-btn').onclick=async()=>{
  if(selectedProduct==='Canva Premium')return checkoutCanva();
@@ -2269,24 +2301,31 @@ document.getElementById('checkout-btn').onclick=async()=>{
  }
 
  if(selectedProduct==='YouTube Premium'){
-   const emails=Array.from(document.querySelectorAll('#single-emails-container .single-email-input'))
-     .map(i=>i.value.trim().toLowerCase()).filter(Boolean);
+   const emails=Array.from(document.querySelectorAll('#single-emails-container .single-email-input')).map(i=>i.value.trim().toLowerCase()).filter(Boolean);
    const stock=getYouTubeStock();
    const unitPrice=Number(selectedPrice||0);
    const validEmails=emails.length>0 && emails.every(email=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
    const unique=new Set(emails).size===emails.length;
 
-   if(!emails.length){ showToast('Masukkan minimal satu email YouTube.','error'); return; }
-   if(!validEmails){ showToast('Pastikan semua email valid.','error'); return; }
-   if(!unique){ showToast('Email tidak boleh sama.','error'); return; }
-   if(emails.length>stock){ showToast(`Jumlah email melebihi stok. Maksimal ${stock}.`,'error'); return; }
+   if(!emails.length){showToast('Masukkan minimal satu email YouTube.','error');return;}
+   if(!validEmails){showToast('Pastikan semua email valid.','error');return;}
+   if(!unique){showToast('Email tidak boleh sama.','error');return;}
+   if(emails.length>stock){showToast(`Jumlah email melebihi stok. Maksimal ${stock}.`,'error');return;}
 
    const totalPrice=unitPrice*emails.length;
    const message=`*Halo MYCLIPS!*\nSaya ingin memesan:\n━━━━━━━━━━━━━━━━━━\n*Produk:* YouTube Premium\n*Paket:* ${selectedPackage}\n*Jumlah:* ${emails.length}\n*Harga Satuan:* Rp ${unitPrice.toLocaleString('id-ID')}\n*Email:* ${emails.join(', ')}\n━━━━━━━━━━━━━━━━━━\n*Total Harga:* Rp ${totalPrice.toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\nMohon diproses ya, terima kasih!`;
+   const waUrl=`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
+   const waWindow=window.open('about:blank','_blank');
 
-   window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`,'_blank');
-   closeModal();
-   showToast('Mengarahkan ke WhatsApp... 📱','success');
+   try{
+     await consumeYouTubeStock(emails.length);
+     if(waWindow) waWindow.location.href=waUrl; else window.location.href=waUrl;
+     closeModal();
+     showToast('Stok berhasil dicatat. Mengarahkan ke WhatsApp... 📱','success');
+   }catch(error){
+     if(waWindow){try{waWindow.close();}catch(_e){}}
+     showToast(error?.message||'Stok YouTube tidak mencukupi.','error');
+   }
    return;
  }
 
