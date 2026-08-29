@@ -524,6 +524,32 @@ button.red:hover{background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%);}
   align-self:flex-start;
 }
 
+
+/* Product order manager */
+.product-order-list{display:grid;gap:10px;margin-top:12px;}
+.product-order-row{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;
+  border:1px solid #f4d7e2;border-radius:14px;
+  background:rgba(255,255,255,.78);
+}
+.product-order-position{
+  width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
+  background:#fff0f5;color:#ff4f8b;font-weight:800;flex:none;
+}
+.product-order-name{flex:1;font-weight:800;color:#374151;}
+.product-order-actions{display:flex;gap:6px;}
+.product-order-actions button{
+  width:38px;height:36px;padding:0;display:grid;place-items:center;
+}
+.product-order-actions button:disabled{
+  opacity:.45;transform:none;box-shadow:none;
+}
+@media(max-width:650px){
+  .product-order-row{padding:10px}
+  .product-order-name{font-size:13px}
+  .product-order-actions button{width:36px;height:34px}
+}
+
 </style>
 
 </head>
@@ -622,6 +648,31 @@ button.red:hover{background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%);}
 </div>
 
 
+
+<!-- =====================================================
+     URUTAN PRODUK
+     ===================================================== -->
+<section class="card">
+
+  <div class="section-title">Urutan Produk di Website</div>
+
+  <div class="section-subtitle">
+    Atur posisi produk yang tampil di halaman utama.
+    Nomor 1 tampil paling kiri/atas, lalu berikutnya mengikuti urutan tersebut.
+  </div>
+
+  <div id="productOrderMessage" class="message"></div>
+
+  <div id="productOrderList" class="product-order-list">
+    <div style="color:#8b8790">Memuat urutan produk...</div>
+  </div>
+
+  <div class="actions" style="margin-top:18px">
+    <button id="saveProductOrderBtn" type="button">Simpan Urutan Produk</button>
+  </div>
+
+</section>
+
 <!-- =====================================================
      TIM CANVA
      ===================================================== -->
@@ -694,7 +745,7 @@ button.red:hover{background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%);}
   </div>
 
   <div class="section-subtitle">
-    Atur jumlah stok Canva, CapCut, dan ChatGPT. Jika stok 0,
+    Atur jumlah stok Canva, CapCut, ChatGPT, dan YouTube. Jika stok 0,
     paket akan dianggap <strong>STOK HABIS</strong> dan
     website akan menonaktifkan pembeliannya.
   </div>
@@ -740,7 +791,7 @@ button.red:hover{background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%);}
   </div>
 
   <div class="section-subtitle">
-    Atur harga Canva, CapCut, dan ChatGPT pada setiap paket.
+    Atur harga Canva, CapCut, ChatGPT, dan YouTube pada setiap paket.
   </div>
 
   <div
@@ -1146,6 +1197,11 @@ const stockPackages = {
     "15 Hari",
     "30 Hari"
   ]
+,
+  "YouTube Premium": [
+    "1 Bulan",
+    "2 Bulan"
+  ]
 };
 
 let currentFilter =
@@ -1473,6 +1529,173 @@ function stopAutoRefresh(){
 }
 
 
+
+/* =====================================================
+   PRODUCT DISPLAY ORDER
+   ===================================================== */
+const PRODUCT_ORDER_DEFAULT = [
+  'Canva Premium',
+  'CapCut Premium',
+  'ChatGPT Pro',
+  'YouTube Premium'
+];
+
+let productDisplayOrder = [...PRODUCT_ORDER_DEFAULT];
+
+function renderProductDisplayOrder(){
+  const container = $('productOrderList');
+  if(!container) return;
+
+  container.innerHTML =
+    productDisplayOrder.map((name,index) => `
+      <div class="product-order-row">
+        <div class="product-order-position">${index + 1}</div>
+        <div class="product-order-name">${esc(name)}</div>
+        <div class="product-order-actions">
+          <button
+            type="button"
+            class="dark small"
+            data-order-up="${esc(name)}"
+            ${index === 0 ? 'disabled' : ''}
+            title="Naikkan"
+          >▲</button>
+          <button
+            type="button"
+            class="dark small"
+            data-order-down="${esc(name)}"
+            ${index === productDisplayOrder.length - 1 ? 'disabled' : ''}
+            title="Turunkan"
+          >▼</button>
+        </div>
+      </div>
+    `).join('');
+
+  container.querySelectorAll('[data-order-up]').forEach(btn => {
+    btn.addEventListener(
+      'click',
+      () => moveProductOrder(btn.dataset.orderUp, -1)
+    );
+  });
+
+  container.querySelectorAll('[data-order-down]').forEach(btn => {
+    btn.addEventListener(
+      'click',
+      () => moveProductOrder(btn.dataset.orderDown, 1)
+    );
+  });
+}
+
+function moveProductOrder(name,delta){
+  const from = productDisplayOrder.indexOf(name);
+  const to = from + delta;
+
+  if(
+    from < 0 ||
+    to < 0 ||
+    to >= productDisplayOrder.length
+  ){
+    return;
+  }
+
+  [
+    productDisplayOrder[from],
+    productDisplayOrder[to]
+  ] = [
+    productDisplayOrder[to],
+    productDisplayOrder[from]
+  ];
+
+  renderProductDisplayOrder();
+}
+
+async function loadProductDisplayOrderAdmin(){
+  try{
+    const data = await api('list_product_order');
+
+    const names =
+      (data.products || [])
+        .sort(
+          (a,b) =>
+            Number(a.display_order || 9999) -
+            Number(b.display_order || 9999)
+        )
+        .map(
+          row =>
+            String(row.product_name || '').trim()
+        )
+        .filter(Boolean);
+
+    const merged = [...names];
+
+    PRODUCT_ORDER_DEFAULT.forEach(name => {
+      if(!merged.includes(name)){
+        merged.push(name);
+      }
+    });
+
+    productDisplayOrder = merged;
+    renderProductDisplayOrder();
+
+  }catch(error){
+
+    productDisplayOrder =
+      [...PRODUCT_ORDER_DEFAULT];
+
+    renderProductDisplayOrder();
+
+    message(
+      $('productOrderMessage'),
+      error.message,
+      false
+    );
+  }
+}
+
+async function saveProductDisplayOrder(){
+
+  const btn =
+    $('saveProductOrderBtn');
+
+  try{
+
+    btn.disabled = true;
+
+    const data =
+      await api(
+        'update_product_order',
+        {
+          products:
+            productDisplayOrder.map(
+              (product_name,index) => ({
+                product_name,
+                display_order:index + 1
+              })
+            )
+        }
+      );
+
+    message(
+      $('productOrderMessage'),
+      data.message ||
+      'Urutan produk berhasil disimpan.',
+      true
+    );
+
+  }catch(error){
+
+    message(
+      $('productOrderMessage'),
+      error.message,
+      false
+    );
+
+  }finally{
+
+    btn.disabled = false;
+
+  }
+}
+
 /* =====================================================
    TEAM
    ===================================================== */
@@ -1626,6 +1849,11 @@ const pricePackages = {
   "ChatGPT Pro": [
     "15 Hari",
     "30 Hari"
+  ]
+,
+  "YouTube Premium": [
+    "1 Bulan",
+    "2 Bulan"
   ]
 };
 
@@ -3653,6 +3881,7 @@ $("loginBtn")
         await loadVouchers();
 
         await loadOrders();
+        await loadProductDisplayOrderAdmin();
         updateDashboard();
         updateLastUpdated();
         startAutoRefresh();
@@ -3789,6 +4018,13 @@ $("addVoucherBtn")
   .addEventListener(
     "click",
     addVoucher
+  );
+
+
+$("saveProductOrderBtn")
+  .addEventListener(
+    "click",
+    saveProductDisplayOrder
   );
 
 
