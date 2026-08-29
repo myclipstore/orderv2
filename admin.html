@@ -1726,13 +1726,6 @@ async function loadTeam(){
     );
 
 
-  $("canvaTeamName")
-    .value =
-    "";
-
-  $("canvaInviteUrl")
-    .value =
-    "";
 
 
   $("inviteUpdated")
@@ -3349,6 +3342,20 @@ function renderOrders(){
               0
             );
 
+          const packageLabel =
+            String(
+              order.package_name ||
+              (String(order.product_name || '').trim() === 'Canva Premium'
+                ? (Number(order.duration_months || 1) >= 3
+                    ? '3 Bulan'
+                    : Number(order.duration_months || 1) === 2
+                      ? '2 Bulan'
+                      : '1 Bulan')
+                : order.package_name ||
+                  order.product_name ||
+                  '-')
+            ).trim();
+
 
           return `
 
@@ -3410,7 +3417,7 @@ function renderOrders(){
               <td>
 
                 ${esc(
-                  order.product_name ||
+                  packageLabel ||
                   "-"
                 )}
 
