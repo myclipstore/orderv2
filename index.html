@@ -1286,6 +1286,12 @@ document.querySelectorAll('.info-tooltip button').forEach(button=>button.addEven
 }));
 function closeInfoModal(){document.getElementById('info-modal').classList.add('hidden')}
 
+function closeModal(){
+  const modal=document.getElementById('email-modal');
+  if(modal) modal.classList.add('hidden');
+}
+
+
 let capcutQuantity = 1;
 
 function getCapCutStock(){
@@ -1642,56 +1648,509 @@ function initializeCapCutQuantity(){
   updateCapCutTotal(true);
 }
 
-function openModal(){
- const modal=document.getElementById('email-modal');
- const icon=document.getElementById('modal-icon');
- const title=document.getElementById('modal-title');
- const packageInfo=document.getElementById('modal-package');
- const single=document.getElementById('single-email-section');
- const group=document.getElementById('group-email-section');
- const cap=document.getElementById('capcut-quantity-section');
+async function createPaymentBatch(
+  emails,
+  pkg,
+  name,
+  voucher
+){
 
- const addEmailBtn = document.getElementById('single-add-email-btn');
- if(addEmailBtn) addEmailBtn.classList.remove('hidden');
+  const response =
+    await fetch(
+      CREATE_ORDER_URL,
+      {
+        method:
+          'POST',
 
- if(selectedProduct==='Canva Premium'){
-  icon.textContent='🎨';title.textContent=getCanvaDisplayTitle(selectedPackage);
-  packageInfo.textContent=`${selectedPackage} - ${formatPriceShort(selectedPrice)}`;
-  cap.classList.add('hidden');group.classList.add('hidden');single.classList.remove('hidden');
-  initializeCanvaEmail();
-  document.getElementById('canva-voucher-wrap').classList.remove('hidden');
-  document.getElementById('price-total').classList.add('hidden');
- } else if(selectedProduct==='CapCut Premium'){
-  icon.textContent='🎬';title.textContent=selectedProduct;packageInfo.textContent=`${selectedPackage} - ${formatPriceShort(selectedPrice)}`;
-  cap.classList.remove('hidden');single.classList.add('hidden');group.classList.add('hidden');document.getElementById('canva-voucher-wrap').classList.add('hidden');
-  initializeCapCutQuantity();
- } else if(selectedProduct==='YouTube Premium'){
-   const stock=getYouTubeStock();
+        headers:{
+          'Content-Type':
+            'application/json',
 
-   if(stock<=0){
-     showToast('Stok paket YouTube Premium ini sedang habis.','error');
-     return;
-   }
+          'apikey':
+            SUPABASE_KEY,
 
-   cap.classList.add('hidden');
-   group.classList.add('hidden');
-   single.classList.remove('hidden');
-   document.getElementById('canva-voucher-wrap').classList.add('hidden');
-   initializeYouTubeEmail();
+          'Authorization':
+            'Bearer ' +
+            SUPABASE_KEY
+        },
 
-   document.getElementById('email-modal').classList.remove('hidden');
+        body:
+          JSON.stringify({
+
+            package_code:
+              pkg,
+
+            customer_name:
+              name,
+
+            customer_emails:
+              emails,
+
+            voucher_code:
+              voucher ||
+              undefined
+
+          })
+      }
+    );
+
+
+  const data =
+    await response
+      .json()
+      .catch(
+        () => ({})
+      );
+
+
+  if(
+    !response.ok ||
+    !data.ok
+  ){
+
+    throw new Error(
+      data.error ||
+      'Gagal membuat pembayaran.'
+    );
+
+  }
+
+
+  return data;
+
+}
+
+function openPaymentBatch(
+  data
+){
+
+  return new Promise(
+    (
+      resolve,
+      reject
+    ) => {
+
+      window.snap.pay(
+        data.snap_token,
+        {
+
+          onSuccess:
+            () =>
+              resolve(data),
+
+          onPending:
+            () =>
+              reject(
+                new Error(
+                  'Pembayaran belum selesai.'
+                )
+              ),
+
+          onError:
+            () =>
+              reject(
+                new Error(
+                  'Pembayaran gagal.'
+                )
+              ),
+
+          onClose:
+            () =>
+              reject(
+                new Error(
+                  'Jendela pembayaran ditutup.'
+                )
+              )
+
+        }
+      );
+
+    }
+  );
+
+}
+
+async function checkoutCanva(){
+
+ const name = '';
+
+ const emailInputs =
+   Array.from(
+     document.querySelectorAll(
+       '#single-emails-container .single-email-input'
+     )
+   );
+
+ const emails =
+   emailInputs
+     .map(
+       input =>
+         input.value
+           .trim()
+           .toLowerCase()
+     )
+     .filter(Boolean);
+
+ const voucher =
+   document
+     .getElementById(
+       'canva-voucher'
+     )
+     ?.value
+     .trim()
+     .toUpperCase() ||
+   '';
+
+
+ if(
+   !emails.length
+ ){
+
+   showToast(
+     'Masukkan minimal satu email Canva.',
+     'error'
+   );
+
    return;
+
  }
 
- // ChatGPT tetap menggunakan alur WhatsApp yang sudah ada.
- const email=Array.from(document.querySelectorAll('.single-email-input')).map(i=>i.value.trim()).filter(Boolean).join(', ');
- const message=`*Halo MYCLIPS!*\nSaya ingin memesan:\n━━━━━━━━━━━━━━━━━━\n*Produk:* ${selectedProduct}\n*Paket:* ${selectedPackage}\n*Jumlah:* 1\n*Harga Satuan:* Rp ${parseInt(selectedPrice||0).toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\n*Total Harga:* Rp ${parseInt(selectedPrice||0).toLocaleString('id-ID')}\n━━━━━━━━━━━━━━━━━━\nMohon diproses ya, terima kasih!`;
- window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`,'_blank');
- closeModal();showToast('Mengarahkan ke WhatsApp... 📱','success');
-};
 
+ const emailPattern =
+   /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+ if(
+   !emails.every(
+     email =>
+       emailPattern.test(
+         email
+       )
+   )
+ ){
+
+   showToast(
+     'Pastikan semua email valid.',
+     'error'
+   );
+
+   return;
+
+ }
+
+
+ if(
+   new Set(emails).size !==
+   emails.length
+ ){
+
+   showToast(
+     'Email tidak boleh sama.',
+     'error'
+   );
+
+   return;
+
+ }
+
+
+ if(
+   !selectedPackage
+ ){
+
+   showToast(
+     'Pilih paket Canva terlebih dahulu.',
+     'error'
+   );
+
+   return;
+
+ }
+
+
+ const stockKnown =
+   Object.prototype.hasOwnProperty.call(
+     productStock,
+     'Canva Premium'
+   ) &&
+   Object.prototype.hasOwnProperty.call(
+     productStock['Canva Premium'] || {},
+     selectedPackage
+   );
+
+ if(
+   !stockKnown ||
+   isPackageOutOfStock(
+     'Canva Premium',
+     selectedPackage
+   )
+ ){
+
+   showToast(
+     'Stok paket ini sedang habis.',
+     'error'
+   );
+
+   return;
+
+ }
+
+
+ const packageMap = {
+
+   '1 Bulan':
+     '1',
+
+   '2 Bulan':
+     '2',
+
+   '3 Bulan':
+     '3',
+
+   'Paket Grup (10 akun)/Bulan':
+     'GROUP10'
+
+ };
+
+ const pkg =
+   packageMap[
+     selectedPackage
+   ];
+
+
+ if(
+   !pkg
+ ){
+
+   showToast(
+     'Paket Canva tidak valid.',
+     'error'
+   );
+
+   return;
+
+ }
+
+
+ const btn =
+   document.getElementById(
+     'checkout-btn'
+   );
+
+ btn.disabled =
+   true;
+
+ btn.textContent =
+   'Menyiapkan pembayaran...';
+
+
+ try{
+
+   lastCanvaEmail =
+     emails[0];
+
+
+   localStorage.setItem(
+     'myclips_canva_email',
+     emails[0]
+   );
+
+
+   /*
+    * SATU request → satu batch
+    * → satu transaksi Midtrans
+    * → banyak order_code.
+    */
+
+   const data =
+     await createPaymentBatch(
+       emails,
+       pkg,
+       name,
+       voucher
+     );
+
+
+   const paidData =
+     await openPaymentBatch(
+       data
+     );
+
+
+   closeModal();
+
+
+   /*
+    * Tampilkan semua order code.
+    */
+
+   showDbResult(
+     paidData,
+     `Pembayaran berhasil untuk ${emails.length} email. Akses sedang diproses.`
+   );
+
+
+   /*
+    * Setelah settlement webhook,
+    * masing-masing email/order mempunyai token sendiri.
+    */
+
+   for(
+     const item
+     of (
+       paidData.orders ||
+       []
+     )
+   ){
+
+     try{
+
+       await waitForAccess(
+         item.order_code,
+         item.customer_email,
+         paidData
+       );
+
+     }
+     catch(
+       accessError
+     ){
+
+       console.warn(
+         'Akses order belum siap:',
+         item.order_code,
+         accessError
+       );
+
+     }
+
+   }
+
+   loadCanvaHistory(
+     lastCanvaEmail
+   );
+
+ }
+ catch(error){
+
+   showToast(
+     error?.message ||
+     'Pembayaran gagal.',
+     'error'
+   );
+
+ }
+ finally{
+
+   btn.disabled =
+     false;
+
+   btn.textContent =
+     'Bayar Sekarang';
+
+ }
+
+}
+
+function resetSingleEmailInputs(){
+  const container=document.getElementById('single-emails-container');
+  if(!container) return;
+  container.innerHTML=`
+    <div class="flex gap-2 items-center">
+      <input
+        type="email"
+        name="canva_email_1"
+        id="canva-email-1"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="none"
+        spellcheck="false"
+        inputmode="email"
+        class="flex-1 px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none transition-colors single-email-input"
+        placeholder="contoh@gmail.com"
+      >
+      <button type="button" onclick="removeSingleEmailInput(this)" class="text-pink-400 hover:text-pink-600 text-lg font-bold hidden">✕</button>
+    </div>
+  `;
+  initializeSingleEmails();
+}
+
+function openModal(){
+  const modal=document.getElementById('email-modal');
+  const icon=document.getElementById('modal-icon');
+  const title=document.getElementById('modal-title');
+  const packageInfo=document.getElementById('modal-package');
+  const single=document.getElementById('single-email-section');
+  const group=document.getElementById('group-email-section');
+  const cap=document.getElementById('capcut-quantity-section');
+  const voucherWrap=document.getElementById('canva-voucher-wrap');
+  const priceTotal=document.getElementById('price-total');
+  const checkout=document.getElementById('checkout-btn');
+  const addEmailBtn=document.getElementById('single-add-email-btn');
+
+  if(!modal) return;
+
+  // Always reset shared modal state first so data from another product
+  // can never leak into the newly selected product.
+  single.classList.add('hidden');
+  group.classList.add('hidden');
+  cap.classList.add('hidden');
+  voucherWrap.classList.add('hidden');
+  priceTotal.classList.add('hidden');
+  checkout.disabled=true;
+  checkout.textContent='Checkout via WhatsApp';
+
+  icon.textContent='🎨';
+  title.textContent=selectedProduct || 'MYCLIPS';
+  packageInfo.textContent=`${selectedPackage || '-'} - ${formatPriceShort(selectedPrice)}`;
+
+  if(selectedProduct==='Canva Premium'){
+    icon.textContent='🎨';
+    title.textContent='Canva Premium';
+    resetSingleEmailInputs();
+    single.classList.remove('hidden');
+    voucherWrap.classList.remove('hidden');
+    document.getElementById('canva-voucher').value='';
+    initializeCanvaEmail();
+    priceTotal.classList.add('hidden');
+    modal.classList.remove('hidden');
+    return;
+  }
+
+  if(selectedProduct==='CapCut Premium'){
+    icon.textContent='🎬';
+    title.textContent='CapCut Premium';
+    initializeCapCutQuantity();
+    modal.classList.remove('hidden');
+    return;
+  }
+
+  if(selectedProduct==='YouTube Premium'){
+    const stock=getYouTubeStock();
+    if(stock<=0){
+      showToast('Stok paket YouTube Premium ini sedang habis.','error');
+      return;
+    }
+    icon.textContent='▶️';
+    title.textContent='YouTube Premium';
+    resetSingleEmailInputs();
+    single.classList.remove('hidden');
+    initializeYouTubeEmail();
+    modal.classList.remove('hidden');
+    return;
+  }
+
+  // ChatGPT/manual WhatsApp product.
+  modal.classList.remove('hidden');
+  single.classList.remove('hidden');
+  resetSingleEmailInputs();
+  updateYouTubeTotal();
+}
 
 function processCheckout(){
+  if(selectedProduct === 'Canva Premium'){
+    return checkoutCanva();
+  }
+
   if(selectedProduct === 'YouTube Premium'){
     const validation = validateSingleEmails();
     const emails = validation.emails;
