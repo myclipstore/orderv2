@@ -1485,9 +1485,12 @@ async function refreshAll(silent=false){
     const tasks = [
       loadTeam(),
       loadVouchers(true),
-      loadOrders(true),
-      loadProductDisplayOrderAdmin(true)
+      loadOrders(true)
     ];
+
+    if(!productDisplayOrderDirty){
+      tasks.push(loadProductDisplayOrderAdmin(true));
+    }
 
     if(!editorOpen){
       tasks.push(
@@ -1542,6 +1545,7 @@ const PRODUCT_ORDER_DEFAULT = [
 ];
 
 let productDisplayOrder = [...PRODUCT_ORDER_DEFAULT];
+let productDisplayOrderDirty = false;
 
 function renderProductDisplayOrder(){
   const container = $('productOrderList');
@@ -1606,6 +1610,7 @@ function moveProductOrder(name,delta){
     productDisplayOrder[from]
   ];
 
+  productDisplayOrderDirty = true;
   renderProductDisplayOrder();
 }
 
@@ -1635,7 +1640,9 @@ async function loadProductDisplayOrderAdmin(silent=false){
     });
 
     productDisplayOrder = merged;
-    renderProductDisplayOrder();
+    if(!productDisplayOrderDirty){
+      renderProductDisplayOrder();
+    }
 
     if(
       silent &&
@@ -1689,6 +1696,8 @@ async function saveProductDisplayOrder(){
       'Urutan produk berhasil disimpan.',
       true
     );
+
+    productDisplayOrderDirty = false;
 
   }catch(error){
 
@@ -3890,6 +3899,7 @@ $("loginBtn")
         await loadVouchers();
 
         await loadOrders();
+        productDisplayOrderDirty = false;
         await loadProductDisplayOrderAdmin();
         updateDashboard();
         updateLastUpdated();
